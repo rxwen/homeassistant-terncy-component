@@ -17,8 +17,19 @@ There is support for the following device type within Home Assistant:
 ## Installation
 
 1. Download component from [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases)
-1. Extract the release to home assistant custom_components folder
-1. Restart home assistant
+1. Extract the release to home assistant custom_components folder. Once installed, the file structure is like:
+```
+homeassistant_configuration_root
+├── automations.yaml
+├── blueprints
+├── configuration.yaml
+├── custom_components
+│   └── terncy
+│       ├── config_flow.py
+│       ├── const.py
+| ...
+```
+3. Restart home assistant
 
 
 ## Configuration
