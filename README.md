@@ -1,18 +1,12 @@
 # homeassistant-terncy-component
 terncy custome component for homeassistant
 
----
-title: Terncy
-description: Instructions on how to setup Terncy devices within Home Assistant.
-ha_category:
-  - Light
-ha_iot_class: Local Push
-ha_release: '1.0.0'
-ha_config_flow: true
-ha_codeowners:
-  - '@rxwen'
-ha_domain: terncy
----
+## Component Information
+
+- ha_iot_class: Local Push
+- ha_release: '1.0.0'
+- ha_config_flow: true
+- ha_domain: terncy
 
 The Terncy integration allows you to control your Terncy devices connected to the Terncy Home Center (a Zigbee gateway) with Home Assistant.
 
@@ -21,6 +15,10 @@ There is support for the following device type within Home Assistant:
 - Light
 
 ## Installation
+
+1. Download component from [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases)
+1. Extract the release to home assistant custom component folder
+1. Restart home assistant
 
 
 ## Configuration
