@@ -31,4 +31,19 @@ To set up this integration, click Configuration in the sidebar and then click In
 
 Once registration is complete you should see the Terncy lights listed as light entities.
 
+## Debugging
 
+Enable and view log of Terncy component
+
+Edit configuration.yaml file in home assistant config directory, add below contents:
+
+```
+default_config:
+
+logger:
+  logs:
+    homeassistant.components.terncy: info
+
+```
+
+View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker logs -f --tail 0  {docker_instantce_name}` if running home assostant in docker.
