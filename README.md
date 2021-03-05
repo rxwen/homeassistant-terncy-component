@@ -4,7 +4,7 @@ terncy custome component for homeassistant
 ## Component Information
 
 - ha_iot_class: Local Push
-- ha_release: '1.0.0'
+- ha_release: '2021.3.1'
 - ha_config_flow: true
 - ha_domain: terncy
 
