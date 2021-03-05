@@ -13,8 +13,19 @@
 ## 安装方法
 
 1. 从 [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases) 页下载插件最新版本
-1. 将插件解压安装到 home assistant 配置目录下的 custom_components 目录中
-1. 重启 home assistant
+1. 将插件解压安装到 home assistant 配置目录下的 custom_components 目录中。安装后，目录结构如下：
+```
+homeassistant_configuration_root
+├── automations.yaml
+├── blueprints
+├── configuration.yaml
+├── custom_components
+│   └── terncy
+│       ├── config_flow.py
+│       ├── const.py
+| ...
+```
+3. 重启 home assistant
 
 
 ## 配置流程
