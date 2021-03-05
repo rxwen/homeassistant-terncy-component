@@ -1,0 +1,14 @@
+{
+  "domain": "terncy",
+  "name": "Terncy",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/terncy",
+  "requirements": ["terncy==0.3.5","websockets==8.1","zeroconf==0.28.8"],
+  "zeroconf": [
+      {"type":"_websocket._tcp.local.","name":"box-*"}],
+  "dependencies": [],
+  "after_dependencies": ["discovery"],
+  "codeowners": [
+    "@rxwen"
+  ]
+}
