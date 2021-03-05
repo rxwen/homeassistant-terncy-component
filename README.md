@@ -1,5 +1,5 @@
 # homeassistant-terncy-component
-terncy custome component for homeassistant
+terncy custome component for homeassistant [中文](README.zh-cn.md)
 
 ## Component Information
 
@@ -17,7 +17,7 @@ There is support for the following device type within Home Assistant:
 ## Installation
 
 1. Download component from [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases)
-1. Extract the release to home assistant custom component folder
+1. Extract the release to home assistant custom_components folder
 1. Restart home assistant
 
 
