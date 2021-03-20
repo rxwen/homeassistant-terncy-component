@@ -24,6 +24,11 @@ from .const import (
     PROFILE_EXTENDED_COLOR_LIGHT,
     PROFILE_EXTENDED_COLOR_LIGHT2,
     PROFILE_ONOFF_LIGHT,
+    PROFILE_PLUG,
+    PROFILE_PIR,
+    PROFILE_DOOR_SENSOR,
+    PROFILE_CURTAIN,
+    PROFILE_LOCK,
     TERNCY_EVENT_SVC_ADD,
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_HUB_ID_PREFIX,
@@ -39,10 +44,16 @@ from .light import (
     SUPPORT_TERNCY_ON_OFF,
     TerncyLight,
 )
+from .switch import (
+    TerncySmartPlug,
+)
+from .cover import (
+    TerncyCurtain,
+)
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light"]
+PLATFORMS = ["light", "cover", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,26 +166,40 @@ async def update_or_create_entity(dev, tern):
     if "services" not in dev:
         return []
     for svc in dev["services"]:
+        isLight = False
         profile = svc["profile"]
         features = -1
         if profile == PROFILE_ONOFF_LIGHT:
             features = SUPPORT_TERNCY_ON_OFF
+            isLight = True
         elif profile == PROFILE_COLOR_LIGHT:
             features = SUPPORT_TERNCY_COLOR
+            isLight = True
         elif profile == PROFILE_EXTENDED_COLOR_LIGHT:
             features = SUPPORT_TERNCY_EXTENDED
+            isLight = True
         elif profile == PROFILE_COLOR_TEMPERATURE_LIGHT:
             features = SUPPORT_TERNCY_CT
+            isLight = True
         elif profile == PROFILE_DIMMABLE_COLOR_TEMPERATURE_LIGHT:
             features = SUPPORT_TERNCY_CT
+            isLight = True
         elif profile == PROFILE_DIMMABLE_LIGHT:
             features = SUPPORT_TERNCY_DIMMABLE
+            isLight = True
         elif profile == PROFILE_DIMMABLE_LIGHT2:
             features = SUPPORT_TERNCY_DIMMABLE
+            isLight = True
         elif profile == PROFILE_COLOR_DIMMABLE_LIGHT:
             features = SUPPORT_TERNCY_EXTENDED
+            isLight = True
         elif profile == PROFILE_EXTENDED_COLOR_LIGHT2:
             features = SUPPORT_TERNCY_EXTENDED
+            isLight = True
+        elif profile == PROFILE_PLUG:
+            features = SUPPORT_TERNCY_ON_OFF
+        elif profile == PROFILE_CURTAIN:
+            features = SUPPORT_TERNCY_ON_OFF
         else:
             _LOGGER.info("unsupported profile %d", profile)
             return []
@@ -183,22 +208,30 @@ async def update_or_create_entity(dev, tern):
         name = svc["name"]
         if name == "":
             name = devid
-        light = None
+        device = None
         if devid in tern.hass_platform_data.parsed_devices:
-            light = tern.hass_platform_data.parsed_devices[devid]
+            device = tern.hass_platform_data.parsed_devices[devid]
         else:
-            light = TerncyLight(tern, devid, name, model, version, features)
-        light.update_state(svc["attributes"])
-        light.is_available = available
+            if profile == PROFILE_PLUG:
+                device = TerncySmartPlug(tern, devid, name, model, version, features)
+            elif profile == PROFILE_CURTAIN:
+                device = TerncyCurtain(tern, devid, name, model, version, features)
+            else:
+                device = TerncyLight(tern, devid, name, model, version, features)
+        device.update_state(svc["attributes"])
+        device.is_available = available
         if devid in tern.hass_platform_data.parsed_devices:
-            light.schedule_update_ha_state()
+            device.schedule_update_ha_state()
         else:
-            platform = None
             for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
                 if platform.config_entry.unique_id == tern.dev_id:
-                    if platform.domain == "light":
-                        await platform.async_add_entities([light])
-            tern.hass_platform_data.parsed_devices[devid] = light
+                    if profile == PROFILE_PLUG and platform.domain == "switch":
+                        await platform.async_add_entities([device])
+                    elif profile == PROFILE_CURTAIN and platform.domain == "cover":
+                        await platform.async_add_entities([device])
+                    elif isLight and platform.domain == "light":
+                        await platform.async_add_entities([device])
+            tern.hass_platform_data.parsed_devices[devid] = device
 
 
 async def async_refresh_devices(hass: HomeAssistant, tern):
