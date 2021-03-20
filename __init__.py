@@ -50,10 +50,14 @@ from .switch import (
 from .cover import (
     TerncyCurtain,
 )
+from .binary_sensor import (
+    TerncyDoorSensor,
+    TerncyMotionSensor,
+)
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "cover", "switch"]
+PLATFORMS = ["light", "cover", "switch", "binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,9 +129,8 @@ def terncy_event_handler(tern, ev):
             platform = None
             for plat in async_get_platforms(hass, DOMAIN):
                 if plat.config_entry.unique_id == tern.dev_id:
-                    if plat.domain == "light":
-                        platform = plat
-                        break
+                    platform = plat
+                    break
             if platform is None:
                 return
             for ent in ents:
@@ -200,6 +203,10 @@ async def update_or_create_entity(dev, tern):
             features = SUPPORT_TERNCY_ON_OFF
         elif profile == PROFILE_CURTAIN:
             features = SUPPORT_TERNCY_ON_OFF
+        elif profile == PROFILE_DOOR_SENSOR:
+            features = SUPPORT_TERNCY_ON_OFF
+        elif profile == PROFILE_PIR:
+            features = SUPPORT_TERNCY_ON_OFF
         else:
             _LOGGER.info("unsupported profile %d", profile)
             return []
@@ -216,6 +223,10 @@ async def update_or_create_entity(dev, tern):
                 device = TerncySmartPlug(tern, devid, name, model, version, features)
             elif profile == PROFILE_CURTAIN:
                 device = TerncyCurtain(tern, devid, name, model, version, features)
+            elif profile == PROFILE_DOOR_SENSOR:
+                device = TerncyDoorSensor(tern, devid, name, model, version, features)
+            elif profile == PROFILE_PIR:
+                device = TerncyMotionSensor(tern, devid, name, model, version, features)
             else:
                 device = TerncyLight(tern, devid, name, model, version, features)
         device.update_state(svc["attributes"])
@@ -228,6 +239,10 @@ async def update_or_create_entity(dev, tern):
                     if profile == PROFILE_PLUG and platform.domain == "switch":
                         await platform.async_add_entities([device])
                     elif profile == PROFILE_CURTAIN and platform.domain == "cover":
+                        await platform.async_add_entities([device])
+                    elif profile == PROFILE_DOOR_SENSOR and platform.domain == "binary_sensor":
+                        await platform.async_add_entities([device])
+                    elif profile == PROFILE_PIR and platform.domain == "binary_sensor":
                         await platform.async_add_entities([device])
                     elif isLight and platform.domain == "light":
                         await platform.async_add_entities([device])
