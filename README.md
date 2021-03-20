@@ -55,6 +55,7 @@ Edit configuration.yaml file in home assistant config directory, add below conte
 default_config:
 
 logger:
+  default: info
   logs:
     homeassistant.components.terncy: info
 

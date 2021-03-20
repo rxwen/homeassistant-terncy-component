@@ -51,6 +51,7 @@ homeassistant_configuration_root
 default_config:
 
 logger:
+  default: info
   logs:
     homeassistant.components.terncy: info
 
