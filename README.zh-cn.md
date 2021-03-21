@@ -34,7 +34,7 @@ homeassistant_configuration_root
 
 连接小燕设备之前，请先使用[小燕在家](https://www.xiaoyan.io/app) App 完成系统配置。
 
-- 在 home assistant 的页面上，点击自动发现的小燕家庭中心图标的配置按钮，启动初始化流程。
+- 在 home assistant 的配置-集成 页面上，点击自动发现的小燕家庭中心图标的配置按钮，启动初始化流程。（如未自动发现，点击添加集成并选择 Terncy 进行查找。）
 - 在弹出窗口点击提交。
 - 此时在小燕在家 App 中可收到 home assistant 请求连接的提醒，点击同意。（如未发现提示框，请查看家庭中心配置页，进入局域网访问授权栏查看）
 - 回到 home assistant 页面再次点击提交，完成配置
