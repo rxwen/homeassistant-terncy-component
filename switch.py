@@ -10,6 +10,7 @@ from homeassistant.components.switch import (
 )
 
 from .const import DOMAIN, TERNCY_MANU_NAME
+from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,14 +22,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     config. But even in that case it would have been ignored.
     """
     _LOGGER.info(" terncy smart plug async_setup_platform")
-
-
-def get_attr_value(attrs, key):
-    """Read attr value from terncy attributes."""
-    for att in attrs:
-        if "attr" in att and att["attr"] == key:
-            return att["value"]
-    return None
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

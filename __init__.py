@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import async_get_platforms
 
+from .utils import get_attr_value
 from .const import (
     DOMAIN,
     HA_CLIENT_ID,
@@ -212,6 +213,12 @@ async def update_or_create_entity(dev, tern):
             return []
 
         devid = svc["id"]
+
+        disableRelay = get_attr_value(svc["attributes"], "disableRelay")
+        if disableRelay != None and disableRelay == 1:
+            _LOGGER.info("%s is disabled, skip it", devid)
+            return []
+
         name = svc["name"]
         if name == "":
             name = devid
