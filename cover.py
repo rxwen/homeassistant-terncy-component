@@ -1,5 +1,6 @@
 """Curtain platform support for Terncy."""
 import logging
+from homeassistant.helpers import device_registry as dr
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
@@ -126,6 +127,7 @@ class TerncyCurtain(CoverEntity):
         """Return the terncy device info."""
         return {
             "identifiers": {(DOMAIN, self.device_id)},
+            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
             "name": self.name,
             "manufacturer": TERNCY_MANU_NAME,
             "model": self.model,
