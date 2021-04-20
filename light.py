@@ -12,8 +12,22 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     LightEntity,
 )
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_ENTITY_ID,
+    CONF_DOMAIN,
+    CONF_EVENT,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 
-from .const import DOMAIN, TERNCY_MANU_NAME
+from .const import (
+    DOMAIN,
+    TERNCY_MANU_NAME,
+    ACTION_SINGLE_PRESS,
+    ACTION_DOUBLE_PRESS,
+    ACTION_LONG_PRESS,
+)
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +70,28 @@ class TerncyLight(LightEntity):
         self._ct = 0
         self._hs = (0, 0)
         self._bri = 0
+
+    def get_trigger(self, id):
+        return [
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_SINGLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_DOUBLE_PRESS,
+            },
+            # {
+                # CONF_PLATFORM: "device",
+                # CONF_DEVICE_ID: id,
+                # CONF_DOMAIN: DOMAIN,
+                # CONF_TYPE: ACTION_LONG_PRESS,
+            # },
+        ]
 
     def update_state(self, attrs):
         """Updateterncy state."""
@@ -148,7 +184,6 @@ class TerncyLight(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on terncy light."""
-        _LOGGER.info("turn on %s", kwargs)
         await self.api.set_onoff(self._device_id, 1)
         self._onoff = True
         if ATTR_BRIGHTNESS in kwargs:

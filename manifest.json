@@ -1,6 +1,7 @@
 {
   "domain": "terncy",
   "name": "Terncy",
+  "version": "1.0.4",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/terncy",
   "requirements": ["terncy==0.3.5","websockets==8.1","zeroconf==0.28.8"],

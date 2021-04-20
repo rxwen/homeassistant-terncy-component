@@ -34,6 +34,9 @@ from .const import (
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_HUB_ID_PREFIX,
     TERNCY_MANU_NAME,
+    ACTION_SINGLE_PRESS,
+    ACTION_DOUBLE_PRESS,
+    ACTION_LONG_PRESS,
     TerncyHassPlatformData,
 )
 from .hub_monitor import TerncyHubManager
@@ -55,6 +58,8 @@ from .binary_sensor import (
     TerncyDoorSensor,
     TerncyMotionSensor,
 )
+
+EVENT_DATA_CLICK_TIMES = "click_times"
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -103,6 +108,29 @@ def terncy_event_handler(tern, ev):
                     attrs = ent["attributes"]
                     dev.update_state(attrs)
                     dev.schedule_update_ha_state()
+        elif evt_type == "keyPressed":
+            for ent in ents:
+                if "attributes" not in ent:
+                    continue
+                devid = ent["id"]
+
+                if devid in parsed_devices:
+                    dev = parsed_devices[devid]
+                    attrs = ent["attributes"]
+                    times = attrs[0]["times"]
+                    ev_type = ACTION_SINGLE_PRESS
+                    if times == 2:
+                        ev_type = ACTION_DOUBLE_PRESS
+                    event_data = {
+                        EVENT_DATA_CLICK_TIMES: times,
+                        "source": devid,
+                    }
+                    _LOGGER.info("fire event to bus %s %d", ev_type, times)
+                    _LOGGER.info(event_data)
+                    hass.bus.fire(
+                        ev_type,
+                        event_data,
+                    )
         elif evt_type == "entityAvailable":
             for ent in ents:
                 devid = ent["id"]
@@ -247,7 +275,10 @@ async def update_or_create_entity(dev, tern):
                         await platform.async_add_entities([device])
                     elif profile == PROFILE_CURTAIN and platform.domain == "cover":
                         await platform.async_add_entities([device])
-                    elif profile == PROFILE_DOOR_SENSOR and platform.domain == "binary_sensor":
+                    elif (
+                        profile == PROFILE_DOOR_SENSOR
+                        and platform.domain == "binary_sensor"
+                    ):
                         await platform.async_add_entities([device])
                     elif profile == PROFILE_PIR and platform.domain == "binary_sensor":
                         await platform.async_add_entities([device])

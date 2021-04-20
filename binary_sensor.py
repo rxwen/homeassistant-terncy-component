@@ -10,8 +10,26 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES,
     BinarySensorEntity,
 )
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
+)
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_ENTITY_ID,
+    CONF_DOMAIN,
+    CONF_EVENT,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 
-from .const import DOMAIN, TERNCY_MANU_NAME
+from .const import (
+    DOMAIN,
+    TERNCY_MANU_NAME,
+    ACTION_SINGLE_PRESS,
+    ACTION_DOUBLE_PRESS,
+    ACTION_LONG_PRESS,
+)
+
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class TerncyDoorSensor(BinarySensorEntity):
-    """Representation of a Terncy curtain."""
+    """Representation of a Terncy door sensor."""
 
     def __init__(self, api, devid, name, model, version, features):
         """Initialize the curtain."""
@@ -181,3 +199,19 @@ class TerncyMotionSensor(BinarySensorEntity):
     def device_state_attributes(self):
         """Get terncy curtain states."""
         return {}
+
+    def get_trigger(self, id):
+        return [
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_SINGLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_DOUBLE_PRESS,
+            },
+        ]

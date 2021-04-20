@@ -25,6 +25,8 @@ PROFILE_PIR = 0
 PROFILE_DOOR_SENSOR = 3
 PROFILE_CURTAIN = 5
 PROFILE_LOCK = 11
+PROFILE_YANBUTTON = 6
+PROFILE_SWITCH = 4
 
 CONF_DEVID = "dev_id"
 CONF_DEVICE = "device"
@@ -32,6 +34,11 @@ CONF_NAME = "dn"
 CONF_HOST = "host"
 CONF_IP = "ip"
 CONF_PORT = "port"
+
+ACTION_SINGLE_PRESS = "single_press"
+ACTION_DOUBLE_PRESS = "double_press"
+ACTION_LONG_PRESS = "long_press"
+EVENT_DATA_SOURCE = "source"
 
 
 class TerncyHassPlatformData:
