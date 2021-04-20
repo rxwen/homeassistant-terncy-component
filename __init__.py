@@ -58,12 +58,15 @@ from .binary_sensor import (
     TerncyDoorSensor,
     TerncyMotionSensor,
 )
+from .sensor import (
+    TerncyTemperatureSensor,
+)
 
 EVENT_DATA_CLICK_TIMES = "click_times"
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "cover", "switch", "binary_sensor"]
+PLATFORMS = ["light", "cover", "switch", "binary_sensor", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,12 +105,19 @@ def terncy_event_handler(tern, ev):
                 if "attributes" not in ent:
                     continue
                 devid = ent["id"]
+                temperature = get_attr_value(ent["attributes"], "temperature")
+                if temperature is not None:
+                    _LOGGER.info("got temperature")
+                    devid = devid + "_temp"
 
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
                     attrs = ent["attributes"]
                     dev.update_state(attrs)
                     dev.schedule_update_ha_state()
+                else:
+                    _LOGGER.info("dev %s not found", devid)
+
         elif evt_type == "keyPressed":
             for ent in ents:
                 if "attributes" not in ent:
@@ -197,6 +207,7 @@ async def update_or_create_entity(dev, tern):
     available = dev["online"] if "online" in dev else False
     if "services" not in dev:
         return []
+    _LOGGER.info(dev)
     for svc in dev["services"]:
         isLight = False
         profile = svc["profile"]
@@ -243,16 +254,23 @@ async def update_or_create_entity(dev, tern):
         devid = svc["id"]
 
         disableRelay = get_attr_value(svc["attributes"], "disableRelay")
-        if disableRelay != None and disableRelay == 1:
+        if disableRelay is not None and disableRelay == 1:
             _LOGGER.info("%s is disabled, skip it", devid)
             return []
+        temperature = get_attr_value(svc["attributes"], "temperature")
+        _LOGGER.info(temperature)
 
         name = svc["name"]
         if name == "":
             name = devid
         device = None
+        deviceTemp = None
         if devid in tern.hass_platform_data.parsed_devices:
             device = tern.hass_platform_data.parsed_devices[devid]
+            if temperature is not None:
+                deviceTemp = tern.hass_platform_data.parsed_devices[devid + "_temp"]
+                deviceTemp.update_state(svc["attributes"])
+                deviceTemp.is_available = available
         else:
             if profile == PROFILE_PLUG:
                 device = TerncySmartPlug(tern, devid, name, model, version, features)
@@ -264,12 +282,20 @@ async def update_or_create_entity(dev, tern):
                 device = TerncyMotionSensor(tern, devid, name, model, version, features)
             else:
                 device = TerncyLight(tern, devid, name, model, version, features)
+
+            if temperature is not None:
+                _LOGGER.info("create temperature sensor")
+                deviceTemp = TerncyTemperatureSensor(tern, devid + "_temp", name + " temperature", model, version, features)
+                deviceTemp.update_state(svc["attributes"])
+                deviceTemp.is_available = available
+                tern.hass_platform_data.parsed_devices[devid + "_temp"] = deviceTemp
         device.update_state(svc["attributes"])
         device.is_available = available
         if devid in tern.hass_platform_data.parsed_devices:
             device.schedule_update_ha_state()
         else:
             for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
+                _LOGGER.info(platform.domain)
                 if platform.config_entry.unique_id == tern.dev_id:
                     if profile == PROFILE_PLUG and platform.domain == "switch":
                         await platform.async_add_entities([device])
@@ -282,6 +308,8 @@ async def update_or_create_entity(dev, tern):
                         await platform.async_add_entities([device])
                     elif profile == PROFILE_PIR and platform.domain == "binary_sensor":
                         await platform.async_add_entities([device])
+                    elif deviceTemp is not None and platform.domain == "sensor":
+                        await platform.async_add_entities([deviceTemp])
                     elif isLight and platform.domain == "light":
                         await platform.async_add_entities([device])
             tern.hass_platform_data.parsed_devices[devid] = device
