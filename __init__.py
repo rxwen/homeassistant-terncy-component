@@ -63,6 +63,7 @@ from .sensor import (
 )
 
 EVENT_DATA_CLICK_TIMES = "click_times"
+DEVID_EXT_TEMP = "_temp"
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -108,7 +109,7 @@ def terncy_event_handler(tern, ev):
                 temperature = get_attr_value(ent["attributes"], "temperature")
                 if temperature is not None:
                     _LOGGER.info("got temperature")
-                    devid = devid + "_temp"
+                    devid = devid + DEVID_EXT_TEMP
 
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
@@ -252,6 +253,7 @@ async def update_or_create_entity(dev, tern):
             return []
 
         devid = svc["id"]
+        devidTemp = devid + DEVID_EXT_TEMP
 
         disableRelay = get_attr_value(svc["attributes"], "disableRelay")
         if disableRelay is not None and disableRelay == 1:
@@ -268,7 +270,7 @@ async def update_or_create_entity(dev, tern):
         if devid in tern.hass_platform_data.parsed_devices:
             device = tern.hass_platform_data.parsed_devices[devid]
             if temperature is not None:
-                deviceTemp = tern.hass_platform_data.parsed_devices[devid + "_temp"]
+                deviceTemp = tern.hass_platform_data.parsed_devices[devidTemp]
                 deviceTemp.update_state(svc["attributes"])
                 deviceTemp.is_available = available
         else:
@@ -285,10 +287,10 @@ async def update_or_create_entity(dev, tern):
 
             if temperature is not None:
                 _LOGGER.info("create temperature sensor")
-                deviceTemp = TerncyTemperatureSensor(tern, devid + "_temp", name + " temperature", model, version, features)
+                deviceTemp = TerncyTemperatureSensor(tern, devidTemp, name + " temperature", model, version, features)
                 deviceTemp.update_state(svc["attributes"])
                 deviceTemp.is_available = available
-                tern.hass_platform_data.parsed_devices[devid + "_temp"] = deviceTemp
+                tern.hass_platform_data.parsed_devices[devidTemp] = deviceTemp
         device.update_state(svc["attributes"])
         device.is_available = available
         if devid in tern.hass_platform_data.parsed_devices:
