@@ -28,6 +28,7 @@ from .const import (
     PROFILE_PLUG,
     PROFILE_PIR,
     PROFILE_DOOR_SENSOR,
+    PROFILE_HA_TEMPERATURE_HUMIDITY,
     PROFILE_CURTAIN,
     PROFILE_LOCK,
     TERNCY_EVENT_SVC_ADD,
@@ -246,6 +247,8 @@ async def update_or_create_entity(dev, tern):
             features = SUPPORT_TERNCY_ON_OFF
         elif profile == PROFILE_DOOR_SENSOR:
             features = SUPPORT_TERNCY_ON_OFF
+        elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY:
+            features = SUPPORT_TERNCY_ON_OFF
         elif profile == PROFILE_PIR:
             features = SUPPORT_TERNCY_ON_OFF
         else:
@@ -254,6 +257,8 @@ async def update_or_create_entity(dev, tern):
 
         devid = svc["id"]
         devidTemp = devid + DEVID_EXT_TEMP
+        if profile == PROFILE_HA_TEMPERATURE_HUMIDITY:
+            devid = devidTemp
 
         disableRelay = get_attr_value(svc["attributes"], "disableRelay")
         if disableRelay is not None and disableRelay == 1:
@@ -280,12 +285,14 @@ async def update_or_create_entity(dev, tern):
                 device = TerncyCurtain(tern, devid, name, model, version, features)
             elif profile == PROFILE_DOOR_SENSOR:
                 device = TerncyDoorSensor(tern, devid, name, model, version, features)
+            elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY:
+                device = TerncyTemperatureSensor(tern, devid, name + " temperature", model, version, features)
             elif profile == PROFILE_PIR:
                 device = TerncyMotionSensor(tern, devid, name, model, version, features)
             else:
                 device = TerncyLight(tern, devid, name, model, version, features)
 
-            if temperature is not None:
+            if profile != PROFILE_HA_TEMPERATURE_HUMIDITY and temperature is not None:
                 _LOGGER.info("create temperature sensor")
                 deviceTemp = TerncyTemperatureSensor(tern, devidTemp, name + " temperature", model, version, features)
                 deviceTemp.update_state(svc["attributes"])
@@ -312,6 +319,8 @@ async def update_or_create_entity(dev, tern):
                         await platform.async_add_entities([device])
                     elif deviceTemp is not None and platform.domain == "sensor":
                         await platform.async_add_entities([deviceTemp])
+                    elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY and platform.domain == "sensor":
+                        await platform.async_add_entities([device])
                     elif isLight and platform.domain == "light":
                         await platform.async_add_entities([device])
             tern.hass_platform_data.parsed_devices[devid] = device
