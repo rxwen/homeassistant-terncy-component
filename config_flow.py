@@ -146,7 +146,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(self, discovery_info):
-        """Prepare configuration for a discovered Daikin device."""
+        """Prepare configuration for a discovered Terncy device."""
         identifier = discovery_info["name"]
         identifier = identifier.replace("." + TERNCY_HUB_SVC_NAME, "")
         await self.async_set_unique_id(identifier)
