@@ -13,6 +13,13 @@ The Terncy integration allows you to control your Terncy devices connected to th
 There is support for the following device type within Home Assistant:
 
 - Light
+- Switch
+- Curtain Motor
+- Smart Plug
+- Motion Sensor
+- Door Sensor
+- Temperature Sensor
+- Humidity Sensor
 
 ## Installation
 

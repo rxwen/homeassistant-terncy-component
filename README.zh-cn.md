@@ -10,6 +10,17 @@
 
 使用本插件可以在 Home Assistant 中控制小燕智能家居系统设备。
 
+支持的设备类型如下：
+
+- 灯
+- 开关
+- 窗帘电机
+- 智能插座
+- 人体传感器
+- 门磁传感器
+- 温度传感器
+- 湿度传感器
+
 ## 安装方法
 
 1. 从 [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases) 页下载插件最新版本
