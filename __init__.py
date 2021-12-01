@@ -253,7 +253,7 @@ async def update_or_create_entity(dev, tern):
             features = SUPPORT_TERNCY_ON_OFF
         else:
             _LOGGER.info("unsupported profile %d", profile)
-            return []
+            continue
 
         devid = svc["id"]
         devidTemp = devid + DEVID_EXT_TEMP
@@ -263,7 +263,7 @@ async def update_or_create_entity(dev, tern):
         disableRelay = get_attr_value(svc["attributes"], "disableRelay")
         if disableRelay is not None and disableRelay == 1:
             _LOGGER.info("%s is disabled, skip it", devid)
-            return []
+            continue
         temperature = get_attr_value(svc["attributes"], "temperature")
         _LOGGER.info(temperature)
 
