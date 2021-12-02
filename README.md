@@ -1,5 +1,7 @@
 # homeassistant-terncy-component
-terncy custome component for homeassistant [中文](README.zh-cn.md)
+terncy custome component for homeassistant
+
+[查看中文帮助](README.zh-cn.md)
 
 ## Component Information
 
