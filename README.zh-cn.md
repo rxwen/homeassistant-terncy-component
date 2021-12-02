@@ -1,5 +1,7 @@
 # homeassistant-terncy-component
-小燕系统支持 Home Assistant 插件 [English](README.md)
+小燕系统支持 Home Assistant 插件
+
+[Readme in English](README.md)
 
 ## 插件信息
 
