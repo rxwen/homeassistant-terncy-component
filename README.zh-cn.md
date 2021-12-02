@@ -32,9 +32,13 @@ homeassistant_configuration_root
 ├── configuration.yaml
 ├── custom_components
 │   └── terncy
+│       ├── translations
+│       ├── __init__.py
+│       ├── binary_sensor.py
 │       ├── config_flow.py
 │       ├── const.py
-| ...
+│       ├── cover.py
+│       ├── ...
 ```
 3. 重启 home assistant
 

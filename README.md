@@ -31,10 +31,13 @@ homeassistant_configuration_root
 ├── blueprints
 ├── configuration.yaml
 ├── custom_components
-│   └── terncy
+│       ├── translations
+│       ├── __init__.py
+│       ├── binary_sensor.py
 │       ├── config_flow.py
 │       ├── const.py
-| ...
+│       ├── cover.py
+│       ├── ...
 ```
 3. Restart home assistant
 
@@ -68,4 +71,4 @@ logger:
 
 ```
 
-View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker logs -f --tail 0  {docker_instantce_name}` if running home assostant in docker.
+View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker logs -f --tail 0  {docker_instantce_name}` if running home assistant in docker.
