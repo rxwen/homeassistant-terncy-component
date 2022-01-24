@@ -33,6 +33,7 @@ homeassistant_configuration_root
 ├── blueprints
 ├── configuration.yaml
 ├── custom_components
+│   └── terncy
 │       ├── translations
 │       ├── __init__.py
 │       ├── binary_sensor.py
