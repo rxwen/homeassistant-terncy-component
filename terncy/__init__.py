@@ -213,6 +213,7 @@ async def update_or_create_entity(dev, tern):
     _LOGGER.info(dev)
     for svc in dev["services"]:
         isLight = False
+        isSwitch = False
         profile = svc["profile"]
         features = -1
         if profile == PROFILE_ONOFF_LIGHT:
@@ -280,7 +281,9 @@ async def update_or_create_entity(dev, tern):
                 deviceTemp.update_state(svc["attributes"])
                 deviceTemp.is_available = available
         else:
-            if model.find("TERNCY-WS") > 0 or model.find("TERNCY-LF") > 0:
+            if model.find("TERNCY-WS") >= 0 or model.find("TERNCY-LF") >= 0:
+                isLight = False
+                isSwitch = True
                 device = TerncySwitch(tern, devid, name, model, version, features)
             elif profile == PROFILE_PLUG:
                 device = TerncySmartPlug(tern, devid, name, model, version, features)
@@ -307,25 +310,34 @@ async def update_or_create_entity(dev, tern):
             device.schedule_update_ha_state()
         else:
             for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
-                _LOGGER.info(platform.domain)
                 if platform.config_entry.unique_id == tern.dev_id:
                     if profile == PROFILE_PLUG and platform.domain == "switch":
                         await platform.async_add_entities([device])
+                        break
                     elif profile == PROFILE_CURTAIN and platform.domain == "cover":
                         await platform.async_add_entities([device])
+                        break
                     elif (
                         profile == PROFILE_DOOR_SENSOR
                         and platform.domain == "binary_sensor"
                     ):
                         await platform.async_add_entities([device])
+                        break
                     elif profile == PROFILE_PIR and platform.domain == "binary_sensor":
                         await platform.async_add_entities([device])
+                        break
                     elif deviceTemp is not None and platform.domain == "sensor":
                         await platform.async_add_entities([deviceTemp])
+                        break
                     elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY and platform.domain == "sensor":
                         await platform.async_add_entities([device])
+                        break
                     elif isLight and platform.domain == "light":
                         await platform.async_add_entities([device])
+                        break
+                    elif isSwitch and platform.domain == "switch":
+                        await platform.async_add_entities([device])
+                        break
             tern.hass_platform_data.parsed_devices[devid] = device
 
 
