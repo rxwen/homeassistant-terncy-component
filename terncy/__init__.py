@@ -51,6 +51,7 @@ from .light import (
 )
 from .switch import (
     TerncySmartPlug,
+    TerncySwitch,
 )
 from .cover import (
     TerncyCurtain,
@@ -279,7 +280,9 @@ async def update_or_create_entity(dev, tern):
                 deviceTemp.update_state(svc["attributes"])
                 deviceTemp.is_available = available
         else:
-            if profile == PROFILE_PLUG:
+            if model.find("TERNCY-WS") > 0 or model.find("TERNCY-LF") > 0:
+                device = TerncySwitch(tern, devid, name, model, version, features)
+            elif profile == PROFILE_PLUG:
                 device = TerncySmartPlug(tern, devid, name, model, version, features)
             elif profile == PROFILE_CURTAIN:
                 device = TerncyCurtain(tern, devid, name, model, version, features)
