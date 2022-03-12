@@ -94,7 +94,8 @@ def terncy_event_handler(tern, ev):
         _LOGGER.info("got disconnected event %s", tern.dev_id)
         for dev in parsed_devices.values():
             dev.is_available = False
-            dev.schedule_update_ha_state()
+            if dev.hass:
+                dev.schedule_update_ha_state()
     if isinstance(ev, terncy.event.EventMessage):
         _LOGGER.info("got event message %s %s", tern.dev_id, ev.msg)
         evt_type = ""
@@ -117,7 +118,8 @@ def terncy_event_handler(tern, ev):
                     dev = parsed_devices[devid]
                     attrs = ent["attributes"]
                     dev.update_state(attrs)
-                    dev.schedule_update_ha_state()
+                    if dev.hass:
+                        dev.schedule_update_ha_state()
                 else:
                     _LOGGER.info("dev %s not found", devid)
 
@@ -156,7 +158,8 @@ def terncy_event_handler(tern, ev):
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
                     dev.is_available = False
-                    dev.schedule_update_ha_state()
+                    if dev.hass:
+                        dev.schedule_update_ha_state()
                 elif devid.rfind("-") > 0:
                     prefix = devid[0 : devid.rfind("-")]
                     _LOGGER.info(
@@ -166,7 +169,8 @@ def terncy_event_handler(tern, ev):
                     for dev in devs:
                         _LOGGER.info("[%s] %s is offline", tern.dev_id, dev.unique_id)
                         dev.is_available = False
-                        dev.schedule_update_ha_state()
+                        if dev.hass:
+                            dev.schedule_update_ha_state()
         elif evt_type == "entityDeleted":
             platform = None
             for plat in async_get_platforms(hass, DOMAIN):
@@ -181,7 +185,8 @@ def terncy_event_handler(tern, ev):
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
                     dev.is_available = False
-                    dev.schedule_update_ha_state()
+                    if dev.hass:
+                        dev.schedule_update_ha_state()
                 elif devid.rfind("-") > 0:
                     prefix = devid[0 : devid.rfind("-")]
                     _LOGGER.info(
@@ -307,7 +312,8 @@ async def update_or_create_entity(dev, tern):
         device.update_state(svc["attributes"])
         device.is_available = available
         if devid in tern.hass_platform_data.parsed_devices:
-            device.schedule_update_ha_state()
+            if device.hass:
+                device.schedule_update_ha_state()
         else:
             for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
                 if platform.config_entry.unique_id == tern.dev_id:
