@@ -147,19 +147,19 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Terncy device."""
-        identifier = discovery_info["name"]
+        identifier = discovery_info.name
         identifier = identifier.replace("." + TERNCY_HUB_SVC_NAME, "")
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
-        properties = discovery_info["properties"]
+        properties = discovery_info.properties
         name = properties[CONF_NAME]
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
         self.identifier = identifier
         self.name = name
-        self.host = discovery_info[CONF_HOST]
-        self.port = discovery_info[CONF_PORT]
+        self.host = discovery_info.host
+        self.port = discovery_info.port
         self.terncy.ip = self.host
         self.terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
