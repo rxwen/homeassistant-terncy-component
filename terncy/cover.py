@@ -146,8 +146,3 @@ class TerncyCurtain(CoverEntity):
         percent = kwargs[ATTR_POSITION]
         await self.api.set_attribute(self._device_id, "curtainPercent", percent, 0)
         self.async_write_ha_state()
-
-    @property
-    def device_state_attributes(self):
-        """Get terncy curtain states."""
-        return {}

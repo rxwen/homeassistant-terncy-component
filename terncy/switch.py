@@ -113,11 +113,6 @@ class TerncySmartPlug(SwitchEntity):
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()
 
-    @property
-    def device_state_attributes(self):
-        """Get terncy smart plug states."""
-        return {}
-
 
 class TerncySwitch(SwitchEntity):
     """Representation of a Terncy Switch."""
@@ -202,8 +197,3 @@ class TerncySwitch(SwitchEntity):
         self._onoff = False
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()
-
-    @property
-    def device_state_attributes(self):
-        """Get terncy smart plug states."""
-        return {}

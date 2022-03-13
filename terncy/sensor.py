@@ -126,8 +126,3 @@ class TerncyTemperatureSensor(BinarySensorEntity):
             "sw_version": self.version,
             "via_device": (DOMAIN, self.hub_id),
         }
-
-    @property
-    def device_state_attributes(self):
-        """Get terncy curtain states."""
-        return {}

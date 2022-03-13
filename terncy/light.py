@@ -215,8 +215,3 @@ class TerncyLight(LightEntity):
         self._onoff = False
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()
-
-    @property
-    def device_state_attributes(self):
-        """Get terncy light states."""
-        return {}

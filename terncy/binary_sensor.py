@@ -119,11 +119,6 @@ class TerncyDoorSensor(BinarySensorEntity):
             "via_device": (DOMAIN, self.hub_id),
         }
 
-    @property
-    def device_state_attributes(self):
-        """Get terncy curtain states."""
-        return {}
-
 
 class TerncyMotionSensor(BinarySensorEntity):
     """Representation of a Terncy curtain."""
@@ -194,11 +189,6 @@ class TerncyMotionSensor(BinarySensorEntity):
             "sw_version": self.version,
             "via_device": (DOMAIN, self.hub_id),
         }
-
-    @property
-    def device_state_attributes(self):
-        """Get terncy curtain states."""
-        return {}
 
     def get_trigger(self, id):
         return [
