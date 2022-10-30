@@ -14,6 +14,10 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 
 from .utils import get_attr_value
 from .const import (
+    CONF_DEVID,
+    CONF_HOST,
+    CONF_IP,
+    CONF_PORT,
     DOMAIN,
     HA_CLIENT_ID,
     PROFILE_COLOR_DIMMABLE_LIGHT,
@@ -380,8 +384,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     tern = terncy.Terncy(
         HA_CLIENT_ID,
         dev_id,
-        entry.data["host"],
-        entry.data["port"],
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
         entry.data["username"],
         entry.data["token"],
     )
@@ -404,18 +408,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def on_terncy_svc_add(event):
         """Stop push updates when hass stops."""
-        dev_id = event.data["dev_id"]
+        dev_id = event.data[CONF_DEVID]
         _LOGGER.info("found terncy service: %s %s", dev_id, event.data)
-        host = event.data["ip"]
+        ip = event.data[CONF_IP]
         if dev_id == tern.dev_id and not tern.is_connected():
-            tern.host = host
-            _LOGGER.info("start connection to %s %s", dev_id, tern.host)
+            tern.ip = ip
+            _LOGGER.info("start connection to %s %s", dev_id, tern.ip)
 
             hass.async_create_task(setup_terncy_loop())
 
     async def on_terncy_svc_remove(event):
         """Stop push updates when hass stops."""
-        dev_id = event.data["dev_id"]
+        dev_id = event.data[CONF_DEVID]
         _LOGGER.info("terncy svc remove %s", dev_id)
         if not tern.is_connected():
             await tern.stop()
@@ -427,8 +431,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     manager = TerncyHubManager.instance(hass)
     if dev_id in manager.hubs:
         if not tern.is_connected():
-            tern.host = manager.hubs[dev_id]["ip"]
-            _LOGGER.info("start connection to %s %s", dev_id, tern.host)
+            tern.ip = manager.hubs[dev_id][CONF_IP]
+            _LOGGER.info("start connection to %s %s", dev_id, tern.ip)
             hass.async_create_task(setup_terncy_loop())
 
     tern.register_event_handler(terncy_event_handler)
