@@ -28,8 +28,6 @@ from .const import (
     PROFILE_DIMMABLE_LIGHT2,
     PROFILE_EXTENDED_COLOR_LIGHT,
     PROFILE_EXTENDED_COLOR_LIGHT2,
-    PROFILE_HUE_GROUP,
-    PROFILE_LIGHT_GROUP,
     PROFILE_ONOFF_LIGHT,
     PROFILE_PLUG,
     PROFILE_PIR,
@@ -257,12 +255,6 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         features = SUPPORT_TERNCY_ON_OFF
     elif profile == PROFILE_PIR:
         features = SUPPORT_TERNCY_ON_OFF
-    elif profile == PROFILE_LIGHT_GROUP:
-        features = SUPPORT_TERNCY_CT
-        isLight = True
-    elif profile == PROFILE_HUE_GROUP:
-        features = SUPPORT_TERNCY_EXTENDED
-        isLight = True
     else:
         _LOGGER.info("unsupported profile %d", profile)
         return
