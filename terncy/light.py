@@ -184,6 +184,7 @@ class TerncyLight(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on terncy light."""
+        _LOGGER.info("turn on %s", kwargs)
         await self.api.set_onoff(self._device_id, 1)
         self._onoff = True
         if ATTR_BRIGHTNESS in kwargs:
@@ -211,7 +212,7 @@ class TerncyLight(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off terncy light."""
-        _LOGGER.info("turn off")
+        _LOGGER.info("turn off %s", kwargs)
         self._onoff = False
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()
