@@ -381,7 +381,7 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
     devices = response["rsp"]["entities"]
 
     group_response = await tern.get_entities("devicegroup", True)
-    groups = group_response["rsp"]["entities"]
+    groups = group_response["rsp"].get("entities")
 
     pdata = tern.hass_platform_data
 
@@ -398,9 +398,10 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
 
     for dev in devices:
         await update_or_create_entity(dev, tern)
-    
-    for group in groups:
-        await update_or_create_entity(group, tern)
+
+    if groups:
+        for group in groups:
+            await update_or_create_entity(group, tern)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
