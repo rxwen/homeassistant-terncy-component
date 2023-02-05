@@ -8,8 +8,27 @@ from homeassistant.components.switch import (
     DEVICE_CLASSES,
     SwitchEntity,
 )
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+)
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_ENTITY_ID,
+    CONF_DOMAIN,
+    CONF_EVENT,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 
-from .const import DOMAIN, TERNCY_MANU_NAME
+from .const import (
+    DOMAIN,
+    TERNCY_MANU_NAME,
+    ACTION_SINGLE_PRESS,
+    ACTION_DOUBLE_PRESS,
+    ACTION_TRIPLE_PRESS,
+    ACTION_LONG_PRESS,
+)
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,3 +216,137 @@ class TerncySwitch(SwitchEntity):
         self._onoff = False
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()
+
+    def get_trigger(self, id):
+        return [
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_SINGLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_DOUBLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_TRIPLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_LONG_PRESS,
+            },
+        ]
+
+class TerncyButton(ButtonEntity):
+    """Representation of a Terncy Stateless Button."""
+
+    _attr_device_class = ButtonDeviceClass.RESTART
+
+    def __init__(self, api, devid, name, model, version, features):
+        """Initialize the button."""
+        _LOGGER.info("create terncybutton AAA slkdjfslkdfj")
+        self._device_id = devid
+        self.hub_id = api.dev_id
+        self._name = name
+        self.model = model
+        self.version = version
+        self.api = api
+        self.is_available = False
+        self._features = features
+        self._onoff = False
+
+    def update_state(self, attrs):
+        """Updateterncy state."""
+        _LOGGER.info("update state event to %s", attrs)
+        on_off = get_attr_value(attrs, "on")
+        if on_off is not None:
+            self._onoff = on_off == 1
+
+    @property
+    def unique_id(self):
+        """Return terncy unique id."""
+        return self._device_id
+
+    @property
+    def device_id(self):
+        """Return terncy device id."""
+        return self._device_id
+
+    @property
+    def device_class(self):
+        return ButtonDeviceClass.UPDATE.value
+
+    @property
+    def name(self):
+        """Return terncy device name."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return if terncy device is available."""
+        return self.is_available
+
+    @property
+    def supported_features(self):
+        """Return the terncy device feature."""
+        return self._features
+
+    @property
+    def device_info(self):
+        """Return the terncy device info."""
+        return {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
+            "name": self.name,
+            "manufacturer": TERNCY_MANU_NAME,
+            "model": self.model,
+            "sw_version": self.version,
+            "via_device": (DOMAIN, self.hub_id),
+        }
+
+    def get_trigger(self, id):
+        return [
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_SINGLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_DOUBLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_TRIPLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_LONG_PRESS,
+            },
+        ]
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on terncy button."""
+        _LOGGER.info("no need to turn on")
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off terncy button."""
+        _LOGGER.info("no need to turn off")
+
+    async def async_press(self) -> None:
+        _LOGGER.info(" terncy button pressed, nothing to do")

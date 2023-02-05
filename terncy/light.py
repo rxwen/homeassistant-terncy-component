@@ -24,9 +24,6 @@ from homeassistant.const import (
 from .const import (
     DOMAIN,
     TERNCY_MANU_NAME,
-    ACTION_SINGLE_PRESS,
-    ACTION_DOUBLE_PRESS,
-    ACTION_LONG_PRESS,
 )
 from .utils import get_attr_value
 
@@ -72,26 +69,7 @@ class TerncyLight(LightEntity):
         self._bri = 0
 
     def get_trigger(self, id):
-        return [
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_SINGLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_DOUBLE_PRESS,
-            },
-            # {
-                # CONF_PLATFORM: "device",
-                # CONF_DEVICE_ID: id,
-                # CONF_DOMAIN: DOMAIN,
-                # CONF_TYPE: ACTION_LONG_PRESS,
-            # },
-        ]
+        return []
 
     def update_state(self, attrs):
         """Updateterncy state."""

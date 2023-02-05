@@ -4,9 +4,8 @@ _LOGGER = logging.getLogger(__name__)
 from typing import List
 
 import voluptuous as vol
-
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -29,12 +28,13 @@ from .const import (
     EVENT_DATA_SOURCE,
     ACTION_SINGLE_PRESS,
     ACTION_DOUBLE_PRESS,
+    ACTION_TRIPLE_PRESS,
     ACTION_LONG_PRESS,
 )
 
-SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_SINGLE_PRESS, ACTION_DOUBLE_PRESS, ACTION_LONG_PRESS]
+SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_SINGLE_PRESS, ACTION_DOUBLE_PRESS, ACTION_TRIPLE_PRESS, ACTION_LONG_PRESS]
 
-TERNCY_BUTTON_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TERNCY_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
         vol.Optional(CONF_ENTITY_ID): cv.entity_id,
@@ -46,12 +46,10 @@ TRIGGER_SCHEMA = vol.Any(
     TERNCY_BUTTON_TRIGGER_SCHEMA,
 )
 
-_LOGGER.info("device_trigger loaded")
 
 async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
     """Validate config."""
 
-    _LOGGER.info("async_validate_trigger_config")
     schema = TERNCY_BUTTON_TRIGGER_SCHEMA
 
     return schema(config)
@@ -64,7 +62,6 @@ from homeassistant.helpers import (
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device triggers for Terncy devices."""
     triggers = []
-    _LOGGER.debug("async_get_triggers for %s", device_id)
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(device_id)
     devid = min(device.identifiers)[1]
@@ -106,9 +103,4 @@ async def async_attach_trigger(
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
     return {}
-    # return {
-        # "extra_fields": vol.Schema(
-            # {vol.Optional(CONF_FOR): cv.NUMERIC_STATE_THRESHOLD_SCHEMA}
-        # )
-    # }
 

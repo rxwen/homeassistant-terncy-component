@@ -21,6 +21,7 @@ from .const import (
     DOMAIN,
     HA_CLIENT_ID,
     PROFILE_COLOR_DIMMABLE_LIGHT,
+    PROFILE_YAN_BUTTON,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
     PROFILE_DIMMABLE_COLOR_TEMPERATURE_LIGHT,
@@ -41,6 +42,7 @@ from .const import (
     TERNCY_MANU_NAME,
     ACTION_SINGLE_PRESS,
     ACTION_DOUBLE_PRESS,
+    ACTION_TRIPLE_PRESS,
     ACTION_LONG_PRESS,
     TerncyHassPlatformData,
 )
@@ -56,6 +58,7 @@ from .light import (
 from .switch import (
     TerncySmartPlug,
     TerncySwitch,
+    TerncyButton,
 )
 from .cover import (
     TerncyCurtain,
@@ -140,12 +143,28 @@ def terncy_event_handler(tern, ev):
                     ev_type = ACTION_SINGLE_PRESS
                     if times == 2:
                         ev_type = ACTION_DOUBLE_PRESS
+                    elif times == 3:
+                        ev_type = ACTION_TRIPLE_PRESS
                     event_data = {
                         EVENT_DATA_CLICK_TIMES: times,
                         "source": devid,
                     }
-                    _LOGGER.info("fire event to bus %s %d", ev_type, times)
-                    _LOGGER.info(event_data)
+                    _LOGGER.warn("fire press event to bus %s %d", ev_type, times)
+                    hass.bus.fire(
+                        ev_type,
+                        event_data,
+                    )
+        elif evt_type == "keyLongPressed":
+            for ent in ents:
+                devid = ent["id"]
+
+                if devid in parsed_devices:
+                    dev = parsed_devices[devid]
+                    ev_type = ACTION_LONG_PRESS
+                    event_data = {
+                        "source": devid,
+                    }
+                    _LOGGER.warn("fire long press event to bus %s", ev_type)
                     hass.bus.fire(
                         ev_type,
                         event_data,
@@ -255,6 +274,8 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         features = SUPPORT_TERNCY_ON_OFF
     elif profile == PROFILE_PIR:
         features = SUPPORT_TERNCY_ON_OFF
+    elif profile == PROFILE_YAN_BUTTON:
+        features = SUPPORT_TERNCY_ON_OFF
     else:
         _LOGGER.info("unsupported profile %d", profile)
         return
@@ -265,11 +286,7 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         devid = devidTemp
 
     disableRelay = get_attr_value(svc["attributes"], "disableRelay")
-    if disableRelay is not None and disableRelay == 1:
-        _LOGGER.info("%s is disabled, skip it", devid)
-        return
     temperature = get_attr_value(svc["attributes"], "temperature")
-    _LOGGER.info(temperature)
 
     name = devid
     if model == "DeviceGroup":
@@ -279,7 +296,6 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
     elif svc["name"] != "":
         name = svc["name"]
 
-    
     device = None
     deviceTemp = None
     if devid in tern.hass_platform_data.parsed_devices:
@@ -289,7 +305,11 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
             deviceTemp.update_state(svc["attributes"])
             deviceTemp.is_available = available
     else:
-        if model.find("TERNCY-WS") >= 0 or model.find("TERNCY-LF") >= 0:
+        if profile == PROFILE_YAN_BUTTON or disableRelay == 1:
+            isLight = False
+            isSwitch = True
+            device = TerncyButton(tern, devid, name, model, version, features)
+        elif model.find("TERNCY-WS") >= 0 or model.find("TERNCY-LF") >= 0:
             isLight = False
             isSwitch = True
             device = TerncySwitch(tern, devid, name, model, version, features)
@@ -323,6 +343,9 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
                 if profile == PROFILE_PLUG and platform.domain == "switch":
                     await platform.async_add_entities([device])
                     break
+                if profile == PROFILE_YAN_BUTTON and platform.domain == "switch":
+                    await platform.async_add_entities([device])
+                    break
                 elif profile == PROFILE_CURTAIN and platform.domain == "cover":
                     await platform.async_add_entities([device])
                     break
@@ -354,13 +377,13 @@ async def update_or_create_entity(dev, tern):
     """Update or create hass entity for given terncy device."""
     model = dev["model"] if "model" in dev else ""
     version = dev["version"] if "version" in dev else ""
-    _LOGGER.info(dev)
+    _LOGGER.info("update or create entity %s", dev)
 
     if model == "DeviceGroup":
         # The group itself is a service
         svc = dev
 
-        # No online field for device group. 
+        # No online field for device group.
         # Group is available all the time, which is consistent with terncy app.
         available = True
 
@@ -385,7 +408,7 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
 
     pdata = tern.hass_platform_data
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=pdata.hub_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, pdata.mac)},

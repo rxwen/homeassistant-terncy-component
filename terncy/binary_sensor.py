@@ -27,6 +27,7 @@ from .const import (
     TERNCY_MANU_NAME,
     ACTION_SINGLE_PRESS,
     ACTION_DOUBLE_PRESS,
+    ACTION_TRIPLE_PRESS,
     ACTION_LONG_PRESS,
 )
 
@@ -105,6 +106,9 @@ class TerncyDoorSensor(BinarySensorEntity):
     def supported_features(self):
         """Return the terncy device feature."""
         return 0
+
+    def get_trigger(self, id):
+        return []
 
     @property
     def device_info(self):
@@ -203,5 +207,11 @@ class TerncyMotionSensor(BinarySensorEntity):
                 CONF_DEVICE_ID: id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_TYPE: ACTION_DOUBLE_PRESS,
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: ACTION_TRIPLE_PRESS,
             },
         ]
