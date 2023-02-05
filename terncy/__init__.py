@@ -289,11 +289,7 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
     temperature = get_attr_value(svc["attributes"], "temperature")
 
     name = devid
-    if model == "DeviceGroup":
-        # Terncy doesn't pass group name back
-        # so we use group_<device_id> for the name.
-        name = "group_" + name
-    elif svc["name"] != "":
+    if "name" in svc and svc["name"] != "":
         name = svc["name"]
 
     device = None
