@@ -337,7 +337,7 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
                     break
                 elif deviceTemp is not None and platform.domain == "sensor":
                     await platform.async_add_entities([deviceTemp])
-                    break
+                    continue
                 elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY and platform.domain == "sensor":
                     await platform.async_add_entities([device])
                     break
