@@ -153,6 +153,10 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         properties = discovery_info.properties
+        _LOGGER.info(properties)
+        if not properties or not CONF_NAME in properties:
+            _LOGGER.warn("invalid discovery properties %s", DOMAIN)
+            return await self.async_step_confirm()
         name = properties[CONF_NAME]
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
