@@ -2,6 +2,7 @@
 
 import ipaddress
 import logging
+import time
 
 from zeroconf import ServiceBrowser
 
@@ -67,7 +68,19 @@ class TerncyZCListener:
         if info is None:
             return
         dev_id = name.replace("." + svc_type, "")
-        txt_records = _parse_svc(dev_id, info)
+        ipaddress = ""
+        txt_records = {}
+        max_retry = 20
+        while max_retry > 0:
+            max_retry = max_retry - 1
+            txt_records = _parse_svc(dev_id, info)
+            ipaddress = txt_records[CONF_IP]
+            _LOGGER.info("ip address is parsed to %s", ipaddress)
+            if not ipaddress == "":
+                break
+            _LOGGER.warn("ip %s is still not available, query again", ipaddress)
+            time.sleep(2)
+            info = zconf.get_service_info(svc_type, name)
 
         self.manager.hubs[dev_id] = txt_records
         self.manager.hass.bus.async_fire(TERNCY_EVENT_SVC_ADD, txt_records)

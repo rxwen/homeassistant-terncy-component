@@ -461,6 +461,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         dev_id = event.data[CONF_DEVID]
         _LOGGER.info("found terncy service: %s %s", dev_id, event.data)
         ip = event.data[CONF_IP]
+        if ip == "":
+            _LOGGER.warn("dev %s's ip address is not valid", dev_id)
+            return
+
         if dev_id == tern.dev_id and not tern.is_connected():
             tern.ip = ip
             _LOGGER.info("start connection to %s %s", dev_id, tern.ip)
