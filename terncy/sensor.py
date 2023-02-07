@@ -3,16 +3,14 @@ import logging
 from typing import Optional
 from homeassistant.helpers import device_registry as dr
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_OPENING,
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASSES,
-    BinarySensorEntity,
+    SensorEntity,
 )
 from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 from homeassistant.const import (
@@ -52,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 
-class TerncyTemperatureSensor(BinarySensorEntity):
+class TerncyTemperatureSensor(SensorEntity):
     """Representation of a Terncy temp sensor."""
 
     def __init__(self, api, devid, name, model, version, features):
@@ -77,7 +75,7 @@ class TerncyTemperatureSensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return terncy unique id."""
-        return self._device_id
+        return self._device_id + "temp"
 
     @property
     def device_id(self):
@@ -106,7 +104,7 @@ class TerncyTemperatureSensor(BinarySensorEntity):
 
     @property
     def device_class(self):
-        """Return if terncy device is available."""
+        """Return terncy device class."""
         return DEVICE_CLASS_TEMPERATURE
 
     @property
@@ -126,3 +124,159 @@ class TerncyTemperatureSensor(BinarySensorEntity):
             "sw_version": self.version,
             "via_device": (DOMAIN, self.hub_id),
         }
+
+    def get_trigger(self, id):
+        return []
+
+
+class TerncyHumiditySensor(SensorEntity):
+    """Representation of a Terncy humidity sensor."""
+
+    def __init__(self, api, devid, name, model, version, features):
+        """Initialize the curtain."""
+        self._device_id = devid
+        self.hub_id = api.dev_id
+        self._name = name
+        self.model = model
+        self.version = version
+        self.api = api
+        self.is_available = False
+        self._features = features
+        self._value = 0
+
+    def update_state(self, attrs):
+        """Update terncy state."""
+        _LOGGER.info("update state event to %s", attrs)
+        humidity = get_attr_value(attrs, "humidity")
+        if temp is not None:
+            self._value = humidity
+
+    @property
+    def unique_id(self):
+        """Return terncy unique id."""
+        return self._device_id + "humidity"
+
+    @property
+    def device_id(self):
+        """Return terncy device id."""
+        return self._device_id
+
+    @property
+    def name(self):
+        """Return terncy device name."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the current humidity."""
+        return round(self._value, 1)
+
+    @property
+    def available(self):
+        """Return if terncy device is available."""
+        return self.is_available
+
+    @property
+    def device_class(self):
+        """Return terncy device class."""
+        return DEVICE_CLASS_HUMIDITY
+
+    @property
+    def supported_features(self):
+        """Return the terncy device feature."""
+        return 0
+
+    @property
+    def device_info(self):
+        """Return the terncy device info."""
+        return {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
+            "name": self.name,
+            "manufacturer": TERNCY_MANU_NAME,
+            "model": self.model,
+            "sw_version": self.version,
+            "via_device": (DOMAIN, self.hub_id),
+        }
+
+    def get_trigger(self, id):
+        return []
+
+
+class TerncyIlluminanceSensor(SensorEntity):
+    """Representation of a Terncy illuminance sensor."""
+
+    def __init__(self, api, devid, name, model, version, features):
+        """Initialize the curtain."""
+        self._device_id = devid
+        self.hub_id = api.dev_id
+        self._name = name
+        self.model = model
+        self.version = version
+        self.api = api
+        self.is_available = False
+        self._features = features
+        self._value = 0
+
+    def update_state(self, attrs):
+        """Update terncy state."""
+        _LOGGER.info("update state event to %s", attrs)
+        illuminance = get_attr_value(attrs, "luminance")
+        if illuminance is not None:
+            self._value = illuminance
+
+    @property
+    def unique_id(self):
+        """Return terncy unique id."""
+        return self._device_id + "-illumin"
+
+    @property
+    def device_id(self):
+        """Return terncy device id."""
+        return self._device_id
+
+    @property
+    def name(self):
+        """Return terncy device name."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the current illuminance."""
+        return round(self._value, 1)
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return gallons as the unit measurement for water."""
+        return "Lux"
+
+    @property
+    def available(self):
+        """Return if terncy device is available."""
+        return self.is_available
+
+    @property
+    def device_class(self):
+        """Return terncy device class."""
+        return DEVICE_CLASS_ILLUMINANCE
+
+    @property
+    def supported_features(self):
+        """Return the terncy device feature."""
+        return 0
+
+    @property
+    def device_info(self):
+        """Return the terncy device info."""
+        return {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
+            "name": self.name,
+            "manufacturer": TERNCY_MANU_NAME,
+            "model": self.model,
+            "sw_version": self.version,
+            "via_device": (DOMAIN, self.hub_id),
+        }
+
+    def get_trigger(self, id):
+        return []

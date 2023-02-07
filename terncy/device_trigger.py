@@ -2,6 +2,7 @@
 import logging
 _LOGGER = logging.getLogger(__name__)
 from typing import List
+from homeassistant.helpers import device_registry as dr
 
 import voluptuous as vol
 from homeassistant.components.automation import AutomationActionType
@@ -62,7 +63,7 @@ from homeassistant.helpers import (
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device triggers for Terncy devices."""
     triggers = []
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     devid = min(device.identifiers)[1]
     for tern in hass.data[DOMAIN].values():
@@ -81,7 +82,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_id = config[CONF_DEVICE_ID]
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     _LOGGER.info(device.identifiers)
     devid = min(device.identifiers)[1]

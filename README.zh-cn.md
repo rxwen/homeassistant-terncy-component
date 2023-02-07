@@ -17,11 +17,14 @@
 - 灯
 - 开关
 - 窗帘电机
+- 无线开关
 - 智能插座
+- 旋钮开关
 - 人体传感器
 - 门磁传感器
 - 温度传感器
 - 湿度传感器
+- 照度传感器
 
 ## 安装方法
 
@@ -70,7 +73,7 @@ default_config:
 logger:
   default: info
   logs:
-    homeassistant.components.terncy: info
+    homeassistant.components.terncy: debug
 
 ```
 

@@ -38,6 +38,12 @@ CONF_HOST = "host"
 CONF_IP = "ip"
 CONF_PORT = "port"
 
+PLATFORM_LIGHT = "light"
+PLATFORM_COVER = "cover"
+PLATFORM_SWITCH = "switch"
+PLATFORM_BINARY_SENSOR = "binary_sensor"
+PLATFORM_SENSOR = "sensor"
+
 ACTION_SINGLE_PRESS = "single_press"
 ACTION_DOUBLE_PRESS = "double_press"
 ACTION_TRIPLE_PRESS = "triple_press"

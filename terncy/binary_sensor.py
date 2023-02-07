@@ -141,8 +141,14 @@ class TerncyMotionSensor(BinarySensorEntity):
 
     def update_state(self, attrs):
         """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
+        _LOGGER.info("update %s state event to %s", self.unique_id, attrs)
         on = get_attr_value(attrs, "motion")
+        if on is not None:
+            self._on = on
+        on = get_attr_value(attrs, "motionL")
+        if on is not None:
+            self._on = on
+        on = get_attr_value(attrs, "motionR")
         if on is not None:
             self._on = on
 
@@ -195,23 +201,4 @@ class TerncyMotionSensor(BinarySensorEntity):
         }
 
     def get_trigger(self, id):
-        return [
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_SINGLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_DOUBLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_TRIPLE_PRESS,
-            },
-        ]
+        return []

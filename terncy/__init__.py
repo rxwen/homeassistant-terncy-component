@@ -22,6 +22,7 @@ from .const import (
     HA_CLIENT_ID,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_YAN_BUTTON,
+    PROFILE_SMART_DIAL,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
     PROFILE_DIMMABLE_COLOR_TEMPERATURE_LIGHT,
@@ -45,6 +46,11 @@ from .const import (
     ACTION_TRIPLE_PRESS,
     ACTION_LONG_PRESS,
     TerncyHassPlatformData,
+    PLATFORM_LIGHT,
+    PLATFORM_COVER,
+    PLATFORM_SWITCH,
+    PLATFORM_BINARY_SENSOR,
+    PLATFORM_SENSOR,
 )
 from .hub_monitor import TerncyHubManager
 from .light import (
@@ -69,14 +75,20 @@ from .binary_sensor import (
 )
 from .sensor import (
     TerncyTemperatureSensor,
+    TerncyHumiditySensor,
+    TerncyIlluminanceSensor,
 )
 
 EVENT_DATA_CLICK_TIMES = "click_times"
 DEVID_EXT_TEMP = "_temp"
+DEVID_EXT_HUMIDITY = "_himidity"
+DEVID_EXT_ILLU = "_illu"
+DEVID_EXT_MOTIONL = "_motionl"
+DEVID_EXT_MOTIONR = "_motionr"
 
 PLATFORM_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "cover", "switch", "binary_sensor", "sensor"]
+PLATFORMS = [PLATFORM_LIGHT, PLATFORM_COVER, PLATFORM_SWITCH, PLATFORM_BINARY_SENSOR, PLATFORM_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,9 +129,18 @@ def terncy_event_handler(tern, ev):
                     continue
                 devid = ent["id"]
                 temperature = get_attr_value(ent["attributes"], "temperature")
-                if temperature is not None:
+                if get_attr_value(ent["attributes"], "temperature") is not None:
                     _LOGGER.info("got temperature")
                     devid = devid + DEVID_EXT_TEMP
+                if get_attr_value(ent["attributes"], "luminance") is not None:
+                    _LOGGER.info("got luminance")
+                    devid = devid + DEVID_EXT_ILLU
+                if get_attr_value(ent["attributes"], "motionL") is not None:
+                    _LOGGER.info("got motionl")
+                    devid = devid + DEVID_EXT_MOTIONL
+                if get_attr_value(ent["attributes"], "motionR") is not None:
+                    _LOGGER.info("got motionr")
+                    devid = devid + DEVID_EXT_MOTIONR
 
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
@@ -230,40 +251,45 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Terncy component."""
     return True
 
+async def add_entity_to_platform(tern, devid, device, attrs, domain):
+    if not devid in tern.hass_platform_data.parsed_devices:
+        for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
+            if platform.config_entry.unique_id == tern.dev_id:
+                if platform.domain == domain:
+                    _LOGGER.info("add device %s of %s to %s", device.name, domain, platform.domain)
+                    await platform.async_add_entities([device])
+                    break
+        tern.hass_platform_data.parsed_devices[devid] = device
+    device.update_state(attrs)
+    if device.hass:
+        device.schedule_update_ha_state()
+
+
 async def update_or_create_entity_inner(svc, tern, model, version, available):
     _LOGGER.info("Updating service %s, available=%s", svc, available)
 
-    isLight = False
-    isSwitch = False
     profile = svc["profile"]
     features = -1
     if profile == PROFILE_ONOFF_LIGHT:
         features = SUPPORT_TERNCY_ON_OFF
-        isLight = True
+    elif profile == PROFILE_SMART_DIAL:
+        features = SUPPORT_TERNCY_ON_OFF
     elif profile == PROFILE_COLOR_LIGHT:
         features = SUPPORT_TERNCY_COLOR
-        isLight = True
     elif profile == PROFILE_EXTENDED_COLOR_LIGHT:
         features = SUPPORT_TERNCY_EXTENDED
-        isLight = True
     elif profile == PROFILE_COLOR_TEMPERATURE_LIGHT:
         features = SUPPORT_TERNCY_CT
-        isLight = True
     elif profile == PROFILE_DIMMABLE_COLOR_TEMPERATURE_LIGHT:
         features = SUPPORT_TERNCY_CT
-        isLight = True
     elif profile == PROFILE_DIMMABLE_LIGHT:
         features = SUPPORT_TERNCY_DIMMABLE
-        isLight = True
     elif profile == PROFILE_DIMMABLE_LIGHT2:
         features = SUPPORT_TERNCY_DIMMABLE
-        isLight = True
     elif profile == PROFILE_COLOR_DIMMABLE_LIGHT:
         features = SUPPORT_TERNCY_EXTENDED
-        isLight = True
     elif profile == PROFILE_EXTENDED_COLOR_LIGHT2:
         features = SUPPORT_TERNCY_EXTENDED
-        isLight = True
     elif profile == PROFILE_PLUG:
         features = SUPPORT_TERNCY_ON_OFF
     elif profile == PROFILE_CURTAIN:
@@ -281,92 +307,70 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         return
 
     devid = svc["id"]
-    devidTemp = devid + DEVID_EXT_TEMP
-    if profile == PROFILE_HA_TEMPERATURE_HUMIDITY:
-        devid = devidTemp
-
-    disableRelay = get_attr_value(svc["attributes"], "disableRelay")
-    temperature = get_attr_value(svc["attributes"], "temperature")
 
     name = devid
     if "name" in svc and svc["name"] != "":
         name = svc["name"]
 
     device = None
-    deviceTemp = None
-    if devid in tern.hass_platform_data.parsed_devices:
-        device = tern.hass_platform_data.parsed_devices[devid]
-        if temperature is not None:
-            deviceTemp = tern.hass_platform_data.parsed_devices[devidTemp]
-            deviceTemp.update_state(svc["attributes"])
-            deviceTemp.is_available = available
-    else:
+    attrs = svc["attributes"]
+
+    disableRelay = get_attr_value(attrs, "disableRelay")
+    temperature = get_attr_value(attrs, "temperature")
+    if not devid in tern.hass_platform_data.parsed_devices:
+        _LOGGER.info("need to add dev %s %d %s to platform", name, profile, devid)
         if profile == PROFILE_YAN_BUTTON or disableRelay == 1:
-            isLight = False
-            isSwitch = True
             device = TerncyButton(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
         elif model.find("TERNCY-WS") >= 0 or model.find("TERNCY-LF") >= 0:
-            isLight = False
-            isSwitch = True
             device = TerncySwitch(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
+        elif profile == PROFILE_SMART_DIAL:
+            device = TerncyButton(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
         elif profile == PROFILE_PLUG:
             device = TerncySmartPlug(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
         elif profile == PROFILE_CURTAIN:
             device = TerncyCurtain(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_COVER)
         elif profile == PROFILE_DOOR_SENSOR:
             device = TerncyDoorSensor(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_BINARY_SENSOR)
+            if not temperature is None:
+                device = TerncyTemperatureSensor(tern, devid + DEVID_EXT_TEMP, name + "-T", model, version, features)
+                device.is_available = available
+                await add_entity_to_platform(tern, devid + DEVID_EXT_TEMP, device, attrs, PLATFORM_SENSOR)
         elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY:
-            device = TerncyTemperatureSensor(tern, devid, name + " temperature", model, version, features)
+            device = TerncyTemperatureSensor(tern, devid + DEVID_EXT_TEMP, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid + DEVID_EXT_TEMP, device, attrs, PLATFORM_SENSOR)
         elif profile == PROFILE_PIR:
-            device = TerncyMotionSensor(tern, devid, name, model, version, features)
+            device = TerncyButton(tern, devid, name, model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
+            device = TerncyMotionSensor(tern, devid+DEVID_EXT_MOTIONL, name + "-L", model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid+DEVID_EXT_MOTIONL, device, attrs, PLATFORM_BINARY_SENSOR)
+            device = TerncyMotionSensor(tern, devid+DEVID_EXT_MOTIONR, name+"-R", model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid+DEVID_EXT_MOTIONR, device, attrs, PLATFORM_BINARY_SENSOR)
+            device = TerncyIlluminanceSensor(tern, devid + DEVID_EXT_ILLU, name + "-I", model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid + DEVID_EXT_ILLU, device, attrs, PLATFORM_SENSOR)
+            device = TerncyTemperatureSensor(tern, devid + DEVID_EXT_TEMP, name + "-T", model, version, features)
+            device.is_available = available
+            await add_entity_to_platform(tern, devid + DEVID_EXT_TEMP, device, attrs, PLATFORM_SENSOR)
         else:
             device = TerncyLight(tern, devid, name, model, version, features)
-
-        if profile != PROFILE_HA_TEMPERATURE_HUMIDITY and temperature is not None:
-            _LOGGER.info("create temperature sensor")
-            deviceTemp = TerncyTemperatureSensor(tern, devidTemp, name + " temperature", model, version, features)
-            deviceTemp.update_state(svc["attributes"])
-            deviceTemp.is_available = available
-            tern.hass_platform_data.parsed_devices[devidTemp] = deviceTemp
-    device.update_state(svc["attributes"])
-    device.is_available = available
-    if devid in tern.hass_platform_data.parsed_devices:
-        if device.hass:
-            device.schedule_update_ha_state()
-    else:
-        for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
-            if platform.config_entry.unique_id == tern.dev_id:
-                if profile == PROFILE_PLUG and platform.domain == "switch":
-                    await platform.async_add_entities([device])
-                    break
-                if profile == PROFILE_YAN_BUTTON and platform.domain == "switch":
-                    await platform.async_add_entities([device])
-                    break
-                elif profile == PROFILE_CURTAIN and platform.domain == "cover":
-                    await platform.async_add_entities([device])
-                    break
-                elif (
-                    profile == PROFILE_DOOR_SENSOR
-                    and platform.domain == "binary_sensor"
-                ):
-                    await platform.async_add_entities([device])
-                    break
-                elif profile == PROFILE_PIR and platform.domain == "binary_sensor":
-                    await platform.async_add_entities([device])
-                    break
-                elif deviceTemp is not None and platform.domain == "sensor":
-                    await platform.async_add_entities([deviceTemp])
-                    continue
-                elif profile == PROFILE_HA_TEMPERATURE_HUMIDITY and platform.domain == "sensor":
-                    await platform.async_add_entities([device])
-                    break
-                elif isLight and platform.domain == "light":
-                    await platform.async_add_entities([device])
-                    break
-                elif isSwitch and platform.domain == "switch":
-                    await platform.async_add_entities([device])
-                    break
-        tern.hass_platform_data.parsed_devices[devid] = device
+            device.is_available = available
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_LIGHT)
 
 
 async def update_or_create_entity(dev, tern):

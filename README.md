@@ -17,11 +17,14 @@ There is support for the following device type within Home Assistant:
 - Light
 - Switch
 - Curtain Motor
+- Wireless Switch
 - Smart Plug
+- Smart Dial
 - Motion Sensor
 - Door Sensor
 - Temperature Sensor
 - Humidity Sensor
+- Illuminance Sensor
 
 ## Installation
 
@@ -70,7 +73,7 @@ default_config:
 logger:
   default: info
   logs:
-    homeassistant.components.terncy: info
+    homeassistant.components.terncy: debug
 
 ```
 
