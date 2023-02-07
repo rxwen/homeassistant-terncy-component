@@ -19,7 +19,7 @@ There is support for the following device type within Home Assistant:
 - Curtain Motor
 - Wireless Switch
 - Smart Plug
-- Smart Dial
+- Smart Dial (Button press event only)
 - Motion Sensor
 - Door Sensor
 - Temperature Sensor
