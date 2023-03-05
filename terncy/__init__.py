@@ -320,7 +320,14 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
 
     disableRelay = get_attr_value(attrs, "disableRelay")
     temperature = get_attr_value(attrs, "temperature")
-    if not devid in tern.hass_platform_data.parsed_devices:
+    if devid in tern.hass_platform_data.parsed_devices:
+        device = tern.hass_platform_data.parsed_devices[devid]
+        device.is_available = available
+        if attrs:
+            device.update_state(attrs)
+        if device.hass:
+            device.schedule_update_ha_state()
+    else:
         _LOGGER.info("need to add dev %s %d %s to platform", name, profile, devid)
         if profile == PROFILE_YAN_BUTTON or disableRelay == 1:
             device = TerncyButton(tern, devid, name, model, version, features)

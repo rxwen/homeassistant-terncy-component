@@ -280,7 +280,7 @@ class TerncyScene(SwitchEntity):
     @property
     def device_class(self):
         """Return if terncy device is available."""
-        return DEVICE_CLASS_OUTLET
+        return DEVICE_CLASS_SWITCH
 
     @property
     def name(self):
