@@ -64,6 +64,7 @@ from .light import (
 from .switch import (
     TerncySmartPlug,
     TerncySwitch,
+    TerncyScene,
     TerncyButton,
 )
 from .cover import (
@@ -268,7 +269,7 @@ async def add_entity_to_platform(tern, devid, device, attrs, domain):
 async def update_or_create_entity_inner(svc, tern, model, version, available):
     _LOGGER.info("Updating service %s, available=%s", svc, available)
 
-    profile = svc["profile"]
+    profile = svc["profile"] if "profile" in svc else ""
     features = -1
     if profile == PROFILE_ONOFF_LIGHT:
         features = SUPPORT_TERNCY_ON_OFF
@@ -302,7 +303,9 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         features = SUPPORT_TERNCY_ON_OFF
     elif profile == PROFILE_YAN_BUTTON:
         features = SUPPORT_TERNCY_ON_OFF
-    else:
+    elif model == "TERNCY-SCENE":
+        features = SUPPORT_TERNCY_ON_OFF
+    else: 
         _LOGGER.info("unsupported profile %d", profile)
         return
 
@@ -313,7 +316,7 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
         name = svc["name"]
 
     device = None
-    attrs = svc["attributes"]
+    attrs = svc["attributes"] if "attributes" in svc else None
 
     disableRelay = get_attr_value(attrs, "disableRelay")
     temperature = get_attr_value(attrs, "temperature")
@@ -367,6 +370,11 @@ async def update_or_create_entity_inner(svc, tern, model, version, available):
             device = TerncyTemperatureSensor(tern, devid + DEVID_EXT_TEMP, name + "-T", model, version, features)
             device.is_available = available
             await add_entity_to_platform(tern, devid + DEVID_EXT_TEMP, device, attrs, PLATFORM_SENSOR)
+        elif model == "TERNCY-SCENE":
+            device = TerncyScene(tern, devid, name, model, version, features)
+            device.is_available = available
+            # A scene can be turned on and off so we represent it as a switch in home assistant
+            await add_entity_to_platform(tern, devid, device, attrs, PLATFORM_SWITCH)
         else:
             device = TerncyLight(tern, devid, name, model, version, features)
             device.is_available = available
@@ -388,6 +396,12 @@ async def update_or_create_entity(dev, tern):
         available = True
 
         await update_or_create_entity_inner(svc, tern, model, version, available)
+    elif model == "TERNCY-SCENE":
+        # The scene itself is a service
+        svc = dev
+
+        available = dev["online"] if "online" in dev else False
+        await update_or_create_entity_inner(svc, tern, model, version, available)
 
     else:
         if "services" not in dev:
@@ -405,6 +419,9 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
 
     group_response = await tern.get_entities("devicegroup", True)
     groups = group_response["rsp"].get("entities")
+
+    scene_response = await tern.get_entities("scene", True)
+    scenes = scene_response["rsp"].get("entities")
 
     pdata = tern.hass_platform_data
 
@@ -425,6 +442,10 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
     if groups:
         for group in groups:
             await update_or_create_entity(group, tern)
+    
+    if scenes:
+        for scene in scenes:
+            await update_or_create_entity(scene, tern)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
