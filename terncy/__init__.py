@@ -239,9 +239,9 @@ def terncy_event_handler(tern, ev):
                     devs = find_dev_by_prefix(parsed_devices, prefix)
                     for dev in devs:
                         _LOGGER.info("[%s] %s is delete", tern.dev_id, dev.unique_id)
-                        hass.async_create_task(
-                            platform.async_remove_entity(dev.entity_id)
-                        )
+                        device_registry = dr.async_get(hass)
+                        if device := device_registry.async_get_device({(DOMAIN, dev.unique_id)}, None):
+                            device_registry.async_remove_device(device.id)
                         parsed_devices.pop(dev.unique_id)
         else:
             _LOGGER.info("unsupported event type %s", evt_type)
