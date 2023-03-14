@@ -239,9 +239,9 @@ def terncy_event_handler(tern, ev):
                     devs = find_dev_by_prefix(parsed_devices, prefix)
                     for dev in devs:
                         _LOGGER.info("[%s] %s is delete", tern.dev_id, dev.unique_id)
-                        hass.async_create_task(
-                            platform.async_remove_entity(dev.entity_id)
-                        )
+                        device_registry = dr.async_get(hass)
+                        if device := device_registry.async_get_device({(DOMAIN, dev.unique_id)}, None):
+                            device_registry.async_remove_device(device.id)
                         parsed_devices.pop(dev.unique_id)
         else:
             _LOGGER.info("unsupported event type %s", evt_type)
@@ -517,3 +517,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry) -> bool:
+    dr.async_get(hass).async_remove_device(device_entry.id)
+    return True
