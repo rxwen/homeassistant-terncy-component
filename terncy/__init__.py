@@ -520,5 +520,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_remove_config_entry_device(hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry) -> bool:
+    # reference: https://developers.home-assistant.io/docs/device_registry_index/#removing-devices
     dr.async_get(hass).async_remove_device(device_entry.id)
     return True
