@@ -79,3 +79,6 @@ logger:
 
 重启 home assistant 后，可在 http://{ip_of_home_assistant}:8123/config/logs 页查看日志。如果通过 docker 运行 home assistant，也可用 `docker logs -f --tail 0  {docker_instantce_name}` 命令查看。
 
+## 注意事项
+
+- 当通过 docker 运行 ha 时，需运行在 [host 网络模式](https://docs.docker.com/network/host/)下（添加`--network host`参数启动 docker）。

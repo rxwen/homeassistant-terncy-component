@@ -78,3 +78,7 @@ logger:
 ```
 
 View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker logs -f --tail 0  {docker_instantce_name}` if running home assistant in docker.
+
+## Note
+
+- When running ha in docker, the docker should be in [host network mode](https://docs.docker.com/network/host/), by appending `--netwrok host` argument to docker start command.
