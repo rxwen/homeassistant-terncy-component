@@ -1,17 +1,17 @@
 {
   "domain": "terncy",
   "name": "Terncy",
-  "version": "1.0.19",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/terncy",
-  "issue_tracker": "https://github.com/rxwen/homeassistant-terncy-component/issues",
-  "iot_class": "local_push",
-  "requirements": ["terncy==0.3.5","websockets>=10.3","zeroconf>=0.28.8"],
-  "zeroconf": [
-      {"type":"_websocket._tcp.local.","name":"box-*"}],
-  "dependencies": [],
   "after_dependencies": ["discovery"],
   "codeowners": [
     "@rxwen"
-  ]
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/terncy",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/rxwen/homeassistant-terncy-component/issues",
+  "requirements": ["terncy==0.3.5","websockets>=10.3","zeroconf>=0.28.8"],
+  "version": "1.0.19",
+  "zeroconf": [
+      {"type":"_websocket._tcp.local.","name":"box-*"}]
 }
