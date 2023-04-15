@@ -3,6 +3,10 @@ terncy custome component for homeassistant
 
 [查看中文帮助](README.zh-cn.md)
 
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/rxwen/homeassistant-terncy-component)
+
+
 ## Component Information
 
 - ha_iot_class: Local Push
@@ -26,7 +30,7 @@ There is support for the following device type within Home Assistant:
 - Humidity Sensor
 - Illuminance Sensor
 
-## Installation
+## Manul Installation
 
 1. Download component from [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases)
 1. Extract the release to home assistant custom_components folder. Once installed, the file structure is like:
@@ -46,6 +50,10 @@ homeassistant_configuration_root
 │       ├── ...
 ```
 3. Restart home assistant
+
+## Installation via [HACS](https://hacs.xyz/)
+
+1. Pending
 
 
 ## Configuration

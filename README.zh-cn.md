@@ -3,6 +3,10 @@
 
 [Readme in English](README.md)
 
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/rxwen/homeassistant-terncy-component)
+
+
 ## 插件信息
 
 - ha_iot_class: Local Push
@@ -26,7 +30,7 @@
 - 湿度传感器
 - 照度传感器
 
-## 安装方法
+## 手动安装方法
 
 1. 从 [Releases](https://github.com/rxwen/homeassistant-terncy-component/releases) 页下载插件最新版本
 1. 将插件解压安装到 home assistant 配置目录下的 custom_components 目录中。安装后，目录结构如下：
@@ -47,6 +51,9 @@ homeassistant_configuration_root
 ```
 3. 重启 home assistant
 
+## 通过[HACS](https://hacs.xyz/)安装
+
+1. 待补充
 
 ## 配置流程
 
