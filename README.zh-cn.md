@@ -4,7 +4,7 @@
 [Readme in English](README.md)
 
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/rxwen/homeassistant-terncy-component)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
 
 ## 插件信息
