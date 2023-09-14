@@ -1,17 +1,16 @@
-"""Constants for the Terncy integration."""
-
+"""Hub monitor for the Terncy integration."""
 import ipaddress
 import logging
 import time
-
-from zeroconf import ServiceBrowser
+from typing import ForwardRef
 
 from homeassistant.components import zeroconf as hasszeroconf
+from homeassistant.const import CONF_PORT
+from zeroconf import ServiceBrowser
 
 from .const import (
     CONF_DEVID,
     CONF_IP,
-    CONF_PORT,
     TERNCY_EVENT_SVC_ADD,
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_EVENT_SVC_UPDATE,
@@ -39,12 +38,13 @@ def _parse_svc(dev_id, info):
 class TerncyZCListener:
     """Terncy zeroconf discovery listener."""
 
-    def __init__(self, manager):
+    def __init__(self, manager: ForwardRef("TerncyHubManager")):
         """Create Terncy discovery listener."""
         self.manager = manager
 
     def remove_service(self, zconf, svc_type, name):
         """Get a terncy service removed event."""
+        _LOGGER.debug("remove_service %s %s %s", svc_type, name)
         dev_id = name.replace("." + svc_type, "")
         if dev_id in self.manager.hubs:
             del self.manager.hubs[dev_id]
@@ -56,6 +56,7 @@ class TerncyZCListener:
         info = zconf.get_service_info(svc_type, name)
         if info is None:
             return
+        _LOGGER.debug("update_service %s %s %s", svc_type, name, info)
         dev_id = name.replace("." + svc_type, "")
         txt_records = _parse_svc(dev_id, info)
 
@@ -67,18 +68,18 @@ class TerncyZCListener:
         info = zconf.get_service_info(svc_type, name)
         if info is None:
             return
+        _LOGGER.debug("add_service %s %s %s", svc_type, name, info)
         dev_id = name.replace("." + svc_type, "")
-        ipaddress = ""
         txt_records = {}
         max_retry = 20
         while max_retry > 0:
             max_retry = max_retry - 1
             txt_records = _parse_svc(dev_id, info)
             ipaddress = txt_records[CONF_IP]
-            _LOGGER.info("ip address is parsed to %s", ipaddress)
+            _LOGGER.debug("ip address is parsed to %s", ipaddress)
             if not ipaddress == "":
                 break
-            _LOGGER.warn("ip %s is still not available, query again", ipaddress)
+            _LOGGER.warning("ip %s is still not available, query again", ipaddress)
             time.sleep(2)
             info = zconf.get_service_info(svc_type, name)
 
