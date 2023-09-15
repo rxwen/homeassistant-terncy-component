@@ -1,27 +1,85 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "This Home Center has already been configured."
-        },
-        "error": {
-            "invalid_auth": "Please approve access request in Terncy app first",
-            "need_new_auth": "Request a new token, then approve access request in Terncy app first, then submit again"
-        },
-        "flow_title": "Terncy: {name}",
-        "step": {
-            "user": {
-                "data": {
-                    "device": "Device"
-                }
-            },
-            "confirm": {
-                "description": "You are about to add the `{name}` to Home Assistant.\n\n**To complete the process, you may have to approve access request in Terncy App after you submit access request.**\n\n",
-                "title": "Confirm adding Terncy Home Center"
-            },
-            "begin_pairing": {
-                "description": "You are adding the `{name}` to Home Assistant.\n\n**To complete the process, please approve the access request in Terncy App. Then submit again.**\n\n",
-                "title": "Adding Terncy Home Center"
-            }
+  "config": {
+    "abort": {
+      "already_configured": "This Home Center has already been configured."
+    },
+    "error": {
+      "invalid_auth": "Please approve access request in Terncy app first",
+      "need_new_auth": "Request a new token, then approve access request in Terncy app first, then submit again"
+    },
+    "flow_title": "Terncy: {name}",
+    "step": {
+      "user": {
+        "data": {
+          "device": "Device"
         }
+      },
+      "confirm": {
+        "description": "You are about to add the `{name}` to Home Assistant.\n\n**To complete the process, you may have to approve access request in Terncy App after you submit access request.**\n\n",
+        "title": "Confirm adding Terncy Home Center"
+      },
+      "begin_pairing": {
+        "description": "You are adding the `{name}` to Home Assistant.\n\n**To complete the process, please approve the access request in Terncy App. Then submit again.**\n\n",
+        "title": "Adding Terncy Home Center"
+      }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "long_press": "Long Press",
+      "rotation": "Rotation",
+      "single_press": "Single Press",
+      "double_press": "Double Press",
+      "triple_press": "Triple Press",
+      "quadruple_press": "Quadruple Press",
+      "quintuple_press": "Quintuple Press",
+      "sextuple_press": "Sextuple Press",
+      "septuple_press": "Septuple Press",
+      "octuple_press": "Octuple Press",
+      "nonuple_press": "Nonuple Press"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion_left": {
+        "name": "Motion Left"
+      },
+      "motion_right": {
+        "name": "Motion Right"
+      }
+    },
+    "switch": {
+      "pure_input": {
+        "name": "Wireless Switch Enabled"
+      },
+      "disable_relay": {
+        "name": "Relay Disabled"
+      },
+      "disabled_relay_status": {
+        "name": "Relay is always on"
+      }
+    },
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press": "Long Press",
+              "rotation": "Rotation",
+              "single_press": "Single Press",
+              "double_press": "Double Press",
+              "triple_press": "Triple Press",
+              "quadruple_press": "Quadruple Press",
+              "quintuple_press": "Quintuple Press",
+              "sextuple_press": "Sextuple Press",
+              "septuple_press": "Septuple Press",
+              "octuple_press": "Octuple Press",
+              "nonuple_press": "Nonuple Press",
+              "pressed": "Pressed"
+            }
+          }
+        }
+      }
+    }
+  }
 }

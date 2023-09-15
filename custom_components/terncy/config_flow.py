@@ -4,18 +4,10 @@ import uuid
 
 import terncy
 import voluptuous as vol
-
 from homeassistant import config_entries
+from homeassistant.const import CONF_DEVICE, CONF_PORT
 
-from .const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_IP,
-    CONF_NAME,
-    CONF_PORT,
-    DOMAIN,
-    TERNCY_HUB_SVC_NAME,
-)
+from .const import CONF_IP, CONF_NAME, DOMAIN, TERNCY_HUB_SVC_NAME
 from .hub_monitor import TerncyHubManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +64,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.name = hub[CONF_NAME]
             self.host = hub[CONF_IP]
             self.port = hub[CONF_PORT]
-            _LOGGER.info("construct Terncy obj for %s %s", self.name, self.host)
+            _LOGGER.debug("construct Terncy obj for %s %s", self.name, self.host)
             self.terncy = terncy.Terncy(
                 self.client_id, self.identifier, self.host, self.port, self.username, ""
             )
@@ -153,9 +145,9 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         properties = discovery_info.properties
-        _LOGGER.info(properties)
+        _LOGGER.debug(properties)
         if not properties or not CONF_NAME in properties:
-            _LOGGER.warn("invalid discovery properties %s", DOMAIN)
+            _LOGGER.warning("invalid discovery properties %s", DOMAIN)
             return await self.async_step_confirm()
         name = properties[CONF_NAME]
         self.context["identifier"] = self.unique_id
@@ -167,6 +159,6 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.terncy.ip = self.host
         self.terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
-        _LOGGER.info("start discovery engine of domain %s", DOMAIN)
+        _LOGGER.debug("start discovery engine of domain %s", DOMAIN)
         await _start_discovery(mgr)
         return await self.async_step_confirm()

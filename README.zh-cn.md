@@ -10,7 +10,7 @@
 ## 插件信息
 
 - ha_iot_class: Local Push
-- home assistant 版本要求: '2021.3.1'
+- home assistant 版本要求: '2022.7.0'
 - ha_config_flow: true
 - ha_domain: terncy
 
