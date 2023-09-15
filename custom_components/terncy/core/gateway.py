@@ -21,12 +21,13 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
     format_mac,
 )
+from homeassistant.helpers.typing import UNDEFINED
 from terncy import Terncy
 from terncy.event import Connected, Disconnected, EventMessage
 from terncy.terncy import _next_req_id
@@ -38,10 +39,12 @@ from ..const import (
     ACTION_PRESSED,
     ACTION_ROTATION,
     ACTION_SINGLE_PRESS,
+    CONF_DEBUG,
     CONF_DEVID,
+    CONF_EXPORT_DEVICE_GROUPS,
+    CONF_EXPORT_SCENES,
     CONF_IP,
     DOMAIN,
-    ENABLE_TERNCY_SCENE,
     EVENT_DATA_CLICK_TIMES,
     EVENT_DATA_SOURCE,
     EVENT_ENTITY_BUTTON_EVENTS,
@@ -63,6 +66,7 @@ from ..types import (
     KeyPressedMsgData,
     PhysicalDeviceData,
     ReportMsgData,
+    RoomData,
     SceneData,
     SimpleMsgData,
     SvcData,
@@ -86,6 +90,8 @@ class TerncyGateway:
         self.parsed_devices: dict[str, TerncyDevice] = {}  # key: serial_number
         self.setups: dict[Platform, SetupHandler] = {}
         self._listeners: dict[str, set[Callable[[list[AttrValue]], None]]] = {}
+        self.room_data: dict[str, str] = {}  # room_id: room_name
+        self.scenes: dict[str, TerncyEntity] = {}  # 场景实体们
 
         self.name = config_entry.title
         self.mac = format_mac(config_entry.unique_id.replace(TERNCY_HUB_ID_PREFIX, ""))
@@ -97,6 +103,14 @@ class TerncyGateway:
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_TOKEN],
         )
+
+        # region 配置项
+        self.debug = config_entry.options.get(CONF_DEBUG, False)
+        self.export_device_groups = config_entry.options.get(
+            CONF_EXPORT_DEVICE_GROUPS, True
+        )
+        self.export_scenes = config_entry.options.get(CONF_EXPORT_SCENES, False)
+        # endregion
 
         async def on_hass_stop(event: Event):
             """Stop push updates when hass stops."""
@@ -348,24 +362,29 @@ class TerncyGateway:
         device_registry = dr.async_get(self.hass)
         for item in msg_data:
             device_serial = item["id"]  # device_serial or scene_id
-
-            will_delete = {
-                serial_number: device
-                for serial_number, device in self.parsed_devices.items()
-                if device_serial == device.device_serial
-            }
-            for serial_number, device in will_delete.items():
-                device.set_available(False)
-                if device_entry := device_registry.async_get_device(
-                    identifiers={(DOMAIN, serial_number)}
-                ):
-                    device_registry.async_remove_device(device_entry.id)
-                    _LOGGER.debug(
-                        "removed device_entry: %s %s",
-                        device_entry.id,
-                        device_entry.name,
-                    )
-                self.parsed_devices.pop(serial_number)
+            if device_serial.startswith("scene-"):
+                if scene := self.scenes.get(device_serial):
+                    scene.set_available(False)
+                    self.scenes.pop(device_serial)
+                    er.async_get(self.hass).async_remove(scene.entity_id)
+            else:
+                will_delete: dict[str, TerncyDevice] = {
+                    serial_number: device
+                    for serial_number, device in self.parsed_devices.items()
+                    if device_serial == device.device_serial
+                }
+                for serial_number, device in will_delete.items():
+                    device.set_available(False)
+                    if device_entry := device_registry.async_get_device(
+                        identifiers=device.identifiers
+                    ):
+                        device_registry.async_remove_device(device_entry.id)
+                        _LOGGER.debug(
+                            "removed device_entry: %s %s",
+                            device_entry.id,
+                            device_entry.name,
+                        )
+                    self.parsed_devices.pop(serial_number)
 
     def _on_entity_updated(self, msg_data: EntityUpdatedMsgData):
         _LOGGER.debug("EVENT: entityUpdated: %s", msg_data)
@@ -424,9 +443,21 @@ class TerncyGateway:
         _LOGGER.debug("[%s] setup %s: %s", self.unique_id, model, svc_list)
 
         device_serial = device_data["id"]
-        sw_version = str(device_data.get("version", ""))
-        hw_version = str(device_data.get("hwVersion", ""))
+        sw_version = (
+            str(device_data.get("version")) if "version" in device_data else UNDEFINED
+        )
+        hw_version = (
+            str(device_data.get("hwVersion"))
+            if "hwVersion" in device_data
+            else UNDEFINED
+        )
         online = device_data.get("online", True)
+
+        suggested_area = UNDEFINED
+
+        if device_room := device_data.get("room"):
+            if device_room_name := self.room_data.get(device_room):
+                suggested_area = device_room_name
 
         device_registry = dr.async_get(self.hass)
 
@@ -441,6 +472,7 @@ class TerncyGateway:
                 name=self.name,
                 sw_version=sw_version,
                 hw_version=hw_version,
+                suggested_area=suggested_area,
             )
 
         for svc in svc_list:
@@ -457,7 +489,9 @@ class TerncyGateway:
                 self.add_device(serial_number, device)
 
                 if profile in PROFILES:
-                    all_descriptions = PROFILES.get(profile)
+                    if svc_room := svc.get("room"):
+                        if svc_room_name := self.room_data.get(svc_room):
+                            suggested_area = svc_room_name
                     device_registry.async_get_or_create(
                         config_entry_id=self.config_entry.entry_id,
                         connections={(CONNECTION_ZIGBEE, serial_number)},
@@ -467,8 +501,10 @@ class TerncyGateway:
                         name=name,
                         sw_version=sw_version,
                         hw_version=hw_version,
+                        suggested_area=suggested_area,
                         via_device=(DOMAIN, self.unique_id),
                     )
+                    all_descriptions = PROFILES.get(profile)
                     for plat, descs in groupby(all_descriptions, lambda x: x.PLATFORM):
                         entities = self.setups[plat](self, device, descs)
                         device.entities.extend(entities)
@@ -479,15 +515,26 @@ class TerncyGateway:
             device.set_available(online)
             device.update_state(attributes)
 
+    async def _fetch_data(self, ent_type: str) -> list:
+        response = await self.api.get_entities(ent_type, True)
+        if "rsp" not in response:
+            _LOGGER.warning("fetch %s error, response: %s", ent_type, response)
+        return response.get("rsp", {}).get("entities", [])
+
     async def async_refresh_devices(self):
         """Get devices from terncy."""
         _LOGGER.debug("[%s] Refresh devices now.", self.unique_id)
 
+        # room
+        try:
+            rooms: list[RoomData] = await self._fetch_data("room")
+            # _LOGGER.debug("[%s] got rooms %s", self.unique_id, rooms)
+            self.room_data = {room["id"]: room["name"] for room in rooms}
+        except Exception as e:
+            _LOGGER.warning("fetch room error: %s", e)
+
         # device
-        response = await self.api.get_entities("device", True)
-        if "rsp" not in response:
-            _LOGGER.warning("fetch device response: %s", response)
-        devices: list[PhysicalDeviceData] = response.get("rsp", {}).get("entities", [])
+        devices: list[PhysicalDeviceData] = await self._fetch_data("device")
         # _LOGGER.debug("[%s] got devices %s", self.unique_id, devices)
 
         for device_data in devices:
@@ -495,30 +542,35 @@ class TerncyGateway:
             self.setup_device(device_data, svc_list)
 
         # device group
-        resp = await self.api.get_entities("devicegroup", True)
-        if "rsp" not in resp:
-            _LOGGER.warning("fetch devicegroup response: %s", response)
-        device_groups: list[DeviceGroupData] = resp.get("rsp", {}).get("entities", [])
+        device_groups: list[DeviceGroupData] = await self._fetch_data("devicegroup")
         # _LOGGER.debug("[%s] got device_groups %s", self.unique_id, device_groups)
 
-        for device_group_data in device_groups:
-            svc_list = [device_group_data]
-            self.setup_device(device_group_data, svc_list)
+        if self.export_device_groups:
+            for device_group_data in device_groups:
+                svc_list = [device_group_data]
+                self.setup_device(device_group_data, svc_list)
 
-        if ENABLE_TERNCY_SCENE:
-            scene_response = await self.api.get_entities("scene", True)
-            if "rsp" not in scene_response:
-                _LOGGER.warning("fetch scene response: %s", response)
-            scenes = scene_response.get("rsp", {}).get("entities", [])
-            _LOGGER.debug("[%s] got scene response: %s", self.unique_id, scenes)
+        # scene
+        scenes: list[SceneData] = await self._fetch_data("scene")
+        _LOGGER.debug("[%s] got scene response: %s", self.unique_id, scenes)
 
+        if self.export_scenes:
+            # 创建一个共用的设备，里面放所有的场景开关
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, f"{self.unique_id}_scenes")},
+                manufacturer=TERNCY_MANU_NAME,
+                model="TERNCY-SCENE",
+                name="TERNCY-SCENE",
+                via_device=(DOMAIN, self.unique_id),
+            )
             for scene_data in scenes:
                 self.setup_scene(scene_data)
 
     def setup_scene(self, scene_data: SceneData):
-        if not ENABLE_TERNCY_SCENE:
+        if not self.export_scenes:
             return
-
         if len(scene_data.get("actions", [])) == 0:
             # ignore scene without actions
             return
@@ -526,7 +578,6 @@ class TerncyGateway:
         scene_id = scene_data["id"]
         _LOGGER.debug("[%s] setup %s %s", self.unique_id, scene_id, scene_data)
 
-        model = scene_data.get("model")  # TERNCY-SCENE
         name = scene_data.get("name") or scene_id  # some name is ""
         online = scene_data.get("online", True)
 
@@ -534,33 +585,34 @@ class TerncyGateway:
         if "on" in scene_data:
             attributes.append({"attr": "on", "value": scene_data["on"]})
 
-        device = self.parsed_devices.get(scene_id)
-        if not device:
-            # new device
-            _LOGGER.debug("[%s] new device: %s %s", scene_id, scene_id)
-
-            device = TerncyDevice(scene_id, scene_id, 0)
-            self.add_device(scene_id, device)
-
+        entity = self.scenes.get(scene_id)
+        if not entity:
             descriptions = [
-                TerncySwitchDescription(key="scene", name=None, icon="mdi:palette")
+                TerncySwitchDescription(
+                    key="scene",
+                    name=name,
+                    icon="mdi:palette",
+                    unique_id_prefix=self.unique_id,  # 融合网关可能会有重复的scene_id，加个网关id作前缀
+                )
             ]
-            entities = self.setups[Platform.SWITCH](self, device, descriptions)
-            device.entities.extend(entities)
+            fake_device = FakeSceneDevice(
+                scene_id, {(DOMAIN, f"{self.unique_id}_scenes")}
+            )
+            entities = self.setups[Platform.SWITCH](self, fake_device, descriptions)
+            entity = entities[0]
+            self.scenes[scene_id] = entity
+        else:
+            entity.entity_description.name = name
 
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_ZIGBEE, scene_id)},
-            identifiers={(DOMAIN, scene_id)},
-            manufacturer=TERNCY_MANU_NAME,
-            model=model,
-            name=name,
-            via_device=(DOMAIN, self.unique_id),
-        )
-
-        # update states
-        device.set_available(online)
-        device.update_state(attributes)
+        entity.set_available(online)
+        entity.update_state(attributes)
 
     # endregion
+
+
+class FakeSceneDevice:
+    """临时方案，后续再调整"""
+
+    def __init__(self, serial_number: str, identifiers):
+        self.serial_number = serial_number
+        self.identifiers = identifiers

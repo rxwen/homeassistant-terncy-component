@@ -28,6 +28,7 @@ class PhysicalDeviceData(TypedDict):
     type: Literal["device"]
 
     id: str  # device_serial -00 结尾的
+    # hub: str | None  # box-01-02-03-04-05-06
     room: str | None  # area-0000
     model: str
 
@@ -66,6 +67,7 @@ class SceneData(TypedDict):
     type: Literal["scene"]
 
     id: str  # scene-000001
+    # hub: str | None  # box-01-02-03-04-05-06
     room: str | None
 
     model: Literal["TERNCY-SCENE"]
@@ -73,6 +75,15 @@ class SceneData(TypedDict):
     on: int  # 0 | 1
     online: bool
     actions: list[SceneActionData] | None
+
+
+class RoomData(TypedDict):
+    type: Literal["room"]
+
+    id: str  # area-0000
+    # hub: str | None  # box-01-02-03-04-05-06
+    model: Literal["TERNCY-ROOM"]
+    name: str
 
 
 class TerncyTokenData(TypedDict):
@@ -110,3 +121,19 @@ EntityCreatedMsgData = list[SceneData]
 
 # entityUpdated
 EntityUpdatedMsgData = list[SceneData | TerncyTokenData]
+
+
+class TDeviceInfo(TypedDict):
+    model: str
+    id: str
+    version: int | None
+    hwVersion: int | None
+    online: bool
+    room: str | None
+
+
+class TSvcInfo(TypedDict):
+    id: str
+    name: str
+    attributes: list[AttrValue] | None
+    profile: int | None

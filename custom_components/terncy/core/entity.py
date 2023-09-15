@@ -34,16 +34,20 @@ class TerncyEntity(Entity):
         self.entity_description = description
 
         self.serial_number = device.serial_number  # svc["id"]
+        """和小燕网关通信用的key"""
 
+        unique_id = self.serial_number
         if description.sub_key:
-            self._attr_unique_id = f"{self.serial_number}_{description.sub_key}"
-        else:
-            self._attr_unique_id = f"{self.serial_number}"
+            unique_id = f"{unique_id}_{description.sub_key}"
+        if description.unique_id_prefix:
+            unique_id = f"{description.unique_id_prefix}_{unique_id}"
+        self._attr_unique_id = unique_id
+
         # migrate from old entity_id
         self._migrate_from_old_entity(gateway.hass, description)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial_number)},
+            identifiers=device.identifiers,
         )
 
     @property

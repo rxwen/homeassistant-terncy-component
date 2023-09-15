@@ -32,6 +32,8 @@ class TerncyDevice:
         self.profile = profile
         self.entities: list[TerncyEntity] = []
 
+        self.identifiers = {(DOMAIN, serial_number)}
+
     def set_available(self, available: bool):
         """设备是否可用"""
         for entity in self.entities:

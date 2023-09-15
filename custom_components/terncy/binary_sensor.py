@@ -1,7 +1,8 @@
 """Binary sensor platform support for Terncy."""
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -30,7 +31,7 @@ class TerncyBinarySensorDescription(
     PLATFORM: Platform = Platform.BINARY_SENSOR
     has_entity_name: bool = True
     value_attr: str = ""
-    invert_state: bool = False
+    value_fn: Callable[[Any], bool | None] = lambda x: x == 1
 
 
 async def async_setup_entry(
@@ -58,9 +59,6 @@ class TerncyBinarySensor(TerncyEntity, BinarySensorEntity):
         if (
             value := get_attr_value(attrs, self.entity_description.value_attr)
         ) is not None:
-            if self.entity_description.invert_state:
-                self._attr_is_on = value == 0
-            else:
-                self._attr_is_on = value == 1
-        if self.hass:
-            self.async_write_ha_state()
+            self._attr_is_on = self.entity_description.value_fn(value)
+            if self.hass:
+                self.async_write_ha_state()

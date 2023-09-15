@@ -46,6 +46,10 @@ CONF_DEVID = "dev_id"
 CONF_NAME = "dn"
 CONF_IP = "ip"
 
+CONF_DEBUG = "debug"
+CONF_EXPORT_DEVICE_GROUPS = "export_device_groups"
+CONF_EXPORT_SCENES = "export_scenes"
+
 ACTION_SINGLE_PRESS = "single_press"
 ACTION_DOUBLE_PRESS = "double_press"
 ACTION_TRIPLE_PRESS = "triple_press"
@@ -103,13 +107,27 @@ class TerncyEntityDescription(EntityDescription):
     sub_key: str | None = None
     """用作 unique_id 的后缀。"""
 
+    unique_id_prefix: str | None = None
+    """用作 unique_id 的前缀。（目前只给scene用，考虑重构）"""
+
     old_unique_id_suffix: str | None = None  # use for migrate
 
     translation_key: str | None = None  # <2023.1 需要这一行
 
 
+class TerncyDeviceData(TypedDict):
+    name: str
+    model: str
+    device_serial: str
+    sw_version: str | None
+    hw_version: str | None
+    descriptions: list[TerncyEntityDescription]
+    triggers: list[dict[str, str]]
+
+    online: bool
+    attributes: list[AttrValue]
+
+
 HAS_EVENT_PLATFORM = MAJOR_VERSION > 2023 or (
     MAJOR_VERSION == 2023 and MINOR_VERSION >= 8
 )  # HA>=2023.8
-
-ENABLE_TERNCY_SCENE = False  # debug
