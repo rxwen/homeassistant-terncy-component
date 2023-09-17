@@ -100,8 +100,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
-        return TerncySensor(gateway, device, description)
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncySensor(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(Platform.SENSOR, create_entity_setup(async_add_entities, new_entity))
@@ -114,7 +114,7 @@ class TerncySensor(TerncyEntity, SensorEntity):
 
     def update_state(self, attrs):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (
             value := get_attr_value(attrs, self.entity_description.value_attr)
         ) is not None:

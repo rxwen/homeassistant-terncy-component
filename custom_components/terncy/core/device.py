@@ -16,23 +16,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TerncyDevice:
-    """对应的是HA里的一个Device，也对应Terncy那边一个profile。
+    """目前是一个eid对应一个HA的Device，也对应Terncy那边一个profile。
     代表一个功能，比如一个四键开关就会有4个TerncyDevice
     """
 
-    def __init__(self, device_serial: str, serial_number: str, profile: int):
+    def __init__(self, did: str, eid: str, profile: int):
         """
-        device_serial (str): entityAvailable、entityDeleted、offline 事件查找设备用
-        serial_number (str): device trigger 查找设备用
+        did (str): entityAvailable、entityDeleted、offline 事件查找设备用
+        eid (str): device trigger 查找设备用
         profile (int): device trigger 查找 actions 用
         """
 
-        self.device_serial = device_serial  # -00 结尾的
-        self.serial_number = serial_number  # -01 -02 ... 结尾的
+        self.did = did  # -00 结尾的
+        self.eid = eid  # -01 -02 ... 结尾的
         self.profile = profile
         self.entities: list[TerncyEntity] = []
 
-        self.identifiers = {(DOMAIN, serial_number)}
+        # self.identifiers = {(DOMAIN, eid)}
 
     def set_available(self, available: bool):
         """设备是否可用"""

@@ -108,17 +108,20 @@ class TerncyEntityDescription(EntityDescription):
     """用作 unique_id 的后缀。"""
 
     unique_id_prefix: str | None = None
-    """用作 unique_id 的前缀。（目前只给scene用，考虑重构）"""
+    """用作 unique_id 的前缀。（目前只给scene用，考虑有没有更好的方式）"""
 
     old_unique_id_suffix: str | None = None  # use for migrate
 
-    translation_key: str | None = None  # <2023.1 需要这一行
+    translation_key: str | None = None  # <2023.1 需要这一行，避免报错
+
+    required_attrs: list[str] | None = None
+    """需要的属性，如果没有这些属性，就不创建实体"""
 
 
 class TerncyDeviceData(TypedDict):
     name: str
     model: str
-    device_serial: str
+    did: str
     sw_version: str | None
     hw_version: str | None
     descriptions: list[TerncyEntityDescription]

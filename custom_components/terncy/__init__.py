@@ -21,12 +21,13 @@ from .hub_monitor import TerncyHubManager
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.SWITCH,
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
     # Platform.EVENT,  # >=2023.8
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 if HAS_EVENT_PLATFORM:
     PLATFORMS.append(Platform.EVENT)

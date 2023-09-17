@@ -14,7 +14,7 @@ class SvcData(TypedDict):
     由 profile 决定里面由哪些Entity组成
     """
 
-    id: str  # serial_number -01 -02 ... 结尾的
+    id: str  # eid -01 -02 ... 结尾的
     room: str | None
 
     name: str | None
@@ -27,7 +27,7 @@ class PhysicalDeviceData(TypedDict):
 
     type: Literal["device"]
 
-    id: str  # device_serial -00 结尾的
+    id: str  # did -00 结尾的
     # hub: str | None  # box-01-02-03-04-05-06
     room: str | None  # area-0000
     model: str
@@ -44,7 +44,7 @@ class DeviceGroupData(TypedDict):
     type: Literal["devicegroup"]
     deviceUuids: list[str]
 
-    id: str  # serial_number
+    id: str  # eid
     room: str | None
 
     model: Literal["DeviceGroup"]
@@ -58,7 +58,7 @@ class DeviceGroupData(TypedDict):
 
 
 class SceneActionData(TypedDict):
-    id: str  # serial_number
+    id: str  # eid
     attr: str
     value: int
 
@@ -86,14 +86,23 @@ class RoomData(TypedDict):
     name: str
 
 
-class TerncyTokenData(TypedDict):
-    type: Literal["token"]
-    id: str
-    model: str
+class UserData(TypedDict):
+    type: Literal["user"]
+
+    id: str  # user-00000003
+    model: Literal["TERNCY-USER"]
+    name: str
+
+
+class TokenData(TypedDict):
+    type: Literal["tok"]
+
+    id: str  # token-00000022
+    model: Literal["TERNCY-TOKEN"]
 
 
 class TerncyEntityData(TypedDict):
-    id: str  # serial_number
+    id: str  # eid
     attributes: list[AttrValue]
 
 
@@ -102,25 +111,25 @@ ReportMsgData = list[TerncyEntityData]
 
 
 class TerncyKeyPressedData(TypedDict):
-    id: str  # serial_number
+    id: str  # eid
     attributes: list[TypedDict("Times", {"times": int})]
 
 
 # keyPressed
 KeyPressedMsgData = list[TerncyKeyPressedData]
 
-# keyLongPressed, rotation: id: serial_number
-# offline, entityDeleted: id: device_serial
+# keyLongPressed, rotation: id: eid
+# offline, entityDeleted: id: did
 SimpleMsgData = list[TypedDict("OnlyId", {"id": str})]
 
 # entityAvailable
-EntityAvailableMsgData = list[PhysicalDeviceData | TerncyTokenData]
+EntityAvailableMsgData = list[PhysicalDeviceData | TokenData]
 
 # entityCreated
-EntityCreatedMsgData = list[SceneData]
+EntityCreatedMsgData = list[SceneData | DeviceGroupData]
 
 # entityUpdated
-EntityUpdatedMsgData = list[SceneData | TerncyTokenData]
+EntityUpdatedMsgData = list[SceneData | UserData]
 
 
 class TDeviceInfo(TypedDict):

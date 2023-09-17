@@ -37,8 +37,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
-        return TerncyCover(gateway, device, description)
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyCover(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(Platform.COVER, create_entity_setup(async_add_entities, new_entity))
@@ -61,7 +61,7 @@ class TerncyCover(TerncyEntity, CoverEntity):
     )
 
     def update_state(self, attrs):
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (value := get_attr_value(attrs, K_CURTAIN_PERCENT)) is not None:
             self._attr_current_cover_position = value
         if self.hass:
@@ -72,22 +72,26 @@ class TerncyCover(TerncyEntity, CoverEntity):
         return self._attr_current_cover_position == 0
 
     async def async_open_cover(self, **kwargs):
-        _LOGGER.debug("async_open_cover: %s", kwargs)
-        await self.api.set_attribute(self.serial_number, K_CURTAIN_PERCENT, 100)
+        """Open the cover."""
+        _LOGGER.debug("%s async_open_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, 100)
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
-        _LOGGER.debug("async_close_cover: %s", kwargs)
-        await self.api.set_attribute(self.serial_number, K_CURTAIN_PERCENT, 0)
+        """Close cover."""
+        _LOGGER.debug("%s async_close_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, 0)
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs):
-        _LOGGER.debug("async_set_cover_position: %s", kwargs)
+        """Move the cover to a specific position."""
+        _LOGGER.debug("%s async_set_cover_position: %s", self.eid, kwargs)
         percent = kwargs[ATTR_POSITION]
-        await self.api.set_attribute(self.serial_number, K_CURTAIN_PERCENT, percent)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, percent)
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        _LOGGER.debug("async_stop_cover: %s", kwargs)
-        await self.api.set_attribute(self.serial_number, K_CURTAIN_MOTOR_STATUS, 0)
+        """Stop the cover."""
+        _LOGGER.debug("%s async_stop_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)
         self.async_write_ha_state()

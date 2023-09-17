@@ -79,9 +79,9 @@ Edit configuration.yaml file in home assistant config directory, add below conte
 default_config:
 
 logger:
-  default: info
+  default: warning
   logs:
-    homeassistant.components.terncy: debug
+    custom_components.terncy: debug
 
 ```
 

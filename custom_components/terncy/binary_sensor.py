@@ -1,7 +1,6 @@
 """Binary sensor platform support for Terncy."""
 import logging
-from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -31,7 +30,7 @@ class TerncyBinarySensorDescription(
     PLATFORM: Platform = Platform.BINARY_SENSOR
     has_entity_name: bool = True
     value_attr: str = ""
-    value_fn: Callable[[Any], bool | None] = lambda x: x == 1
+    value_map: dict[int, bool] = field(default_factory=lambda: {1: True, 0: False})
 
 
 async def async_setup_entry(
@@ -39,8 +38,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
-        return TerncyBinarySensor(gateway, device, description)
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyBinarySensor(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(
@@ -55,10 +54,10 @@ class TerncyBinarySensor(TerncyEntity, BinarySensorEntity):
 
     def update_state(self, attrs: list[AttrValue]):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (
             value := get_attr_value(attrs, self.entity_description.value_attr)
         ) is not None:
-            self._attr_is_on = self.entity_description.value_fn(value)
+            self._attr_is_on = self.entity_description.value_map.get(value)
             if self.hass:
                 self.async_write_ha_state()
