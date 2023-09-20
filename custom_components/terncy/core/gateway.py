@@ -150,6 +150,10 @@ class TerncyGateway:
 
         def on_terncy_svc_remove(event: Event):
             """Stop push updates when hass stops."""
+            dev_id = event.data[CONF_DEVID]
+            if dev_id != tern.dev_id:
+                return
+
             _LOGGER.debug("on_terncy_svc_remove %s", event.data[CONF_DEVID])
             self.async_create_task(tern.stop())
 
