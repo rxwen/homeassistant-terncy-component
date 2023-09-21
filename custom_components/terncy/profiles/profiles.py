@@ -10,6 +10,7 @@ from ..const import (
     EVENT_ENTITY_BUTTON_EVENTS,
     EVENT_ENTITY_DIAL_EVENTS,
     HAS_EVENT_PLATFORM,
+    PROFILE_18,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -153,9 +154,6 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.HS},
         ),
     ],
-    # PROFILE_LOCK: [
-    #     # todo
-    # ],
     PROFILE_EXTENDED_COLOR_LIGHT: [
         TerncyLightDescription(
             color_mode=ColorMode.HS,
@@ -177,6 +175,33 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.COLOR_TEMP,
             supported_color_modes={ColorMode.COLOR_TEMP},
+        ),
+    ],
+    PROFILE_18: [
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+            value_attr="motion",
+        ),
+        BatteryDescription(
+            required_attrs=["battery"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionl",
+            device_class=BinarySensorDeviceClass.MOTION,
+            translation_key="motion_left",
+            value_attr="motionL",
+            required_attrs=["motionL"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionr",
+            device_class=BinarySensorDeviceClass.MOTION,
+            translation_key="motion_right",
+            value_attr="motionR",
+            required_attrs=["motionR"],
         ),
     ],
     PROFILE_DIMMABLE_LIGHT: [

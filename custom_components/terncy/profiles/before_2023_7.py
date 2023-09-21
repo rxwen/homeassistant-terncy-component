@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import EntityCategory  # <2023.3
 
 from ..binary_sensor import TerncyBinarySensorDescription
 from ..const import (
+    PROFILE_18,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -145,9 +146,6 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.HS},
         ),
     ],
-    # PROFILE_LOCK: [
-    #     # todo
-    # ],
     PROFILE_EXTENDED_COLOR_LIGHT: [
         TerncyLightDescription(
             color_mode=ColorMode.HS,
@@ -169,6 +167,34 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.COLOR_TEMP,
             supported_color_modes={ColorMode.COLOR_TEMP},
+        ),
+    ],
+    PROFILE_18: [
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+            value_attr="motion",
+        ),
+        BatteryDescription(
+            name="Battery",
+            required_attrs=["battery"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionl",
+            device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion Left",
+            value_attr="motionL",
+            required_attrs=["motionL"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionr",
+            device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion Right",
+            value_attr="motionR",
+            required_attrs=["motionR"],
         ),
     ],
     PROFILE_DIMMABLE_LIGHT: [
