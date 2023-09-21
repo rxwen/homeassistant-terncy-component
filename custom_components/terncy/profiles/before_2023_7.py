@@ -8,6 +8,7 @@ from homeassistant.helpers.entity import EntityCategory  # <2023.3
 from ..binary_sensor import TerncyBinarySensorDescription
 from ..const import (
     PROFILE_18,
+    PROFILE_24_GAS,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -207,6 +208,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.BRIGHTNESS,
             supported_color_modes={ColorMode.BRIGHTNESS},
+        ),
+    ],
+    PROFILE_24_GAS: [
+        TerncyBinarySensorDescription(
+            key="gas",
+            sub_key="gas",
+            device_class=BinarySensorDeviceClass.GAS,
+            name=None,
+            value_attr="iasZoneStatus",
+            value_map={32: False, 33: True},
         ),
     ],
     PROFILE_COLOR_DIMMABLE_LIGHT: [
