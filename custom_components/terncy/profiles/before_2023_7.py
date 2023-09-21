@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import EntityCategory  # <2023.3
 
 from ..binary_sensor import TerncyBinarySensorDescription
 from ..const import (
+    PROFILE_11_LOCK,
     PROFILE_18,
     PROFILE_24_GAS,
     PROFILE_COLOR_DIMMABLE_LIGHT,
@@ -146,6 +147,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             color_mode=ColorMode.HS,
             supported_color_modes={ColorMode.HS},
         ),
+    ],
+    PROFILE_11_LOCK: [
+        TerncyBinarySensorDescription(
+            key="lock",
+            device_class=BinarySensorDeviceClass.LOCK,
+            name=None,
+            value_attr="lockState",
+            value_map={1: False, 2: True},
+        ),
+        BatteryDescription(name="Battery"),
     ],
     PROFILE_EXTENDED_COLOR_LIGHT: [
         TerncyLightDescription(
