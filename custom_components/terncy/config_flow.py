@@ -13,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_DEBUG,
     CONF_EXPORT_DEVICE_GROUPS,
     CONF_EXPORT_SCENES,
     CONF_IP,
@@ -199,7 +198,6 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # debug = self.config_entry.options.get(CONF_DEBUG, False)
         export_device_groups = self.config_entry.options.get(
             CONF_EXPORT_DEVICE_GROUPS, True
         )
@@ -209,7 +207,6 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    # vol.Required(CONF_DEBUG, default=debug): bool,
                     vol.Required(
                         CONF_EXPORT_DEVICE_GROUPS, default=export_device_groups
                     ): bool,

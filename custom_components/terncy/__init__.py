@@ -8,7 +8,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceEntry
 
 from .const import (
-    CONF_DEBUG,
     CONF_EXPORT_DEVICE_GROUPS,
     CONF_EXPORT_SCENES,
     DOMAIN,
@@ -62,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=gateway.name,
     )
 
-    if MAJOR_VERSION > 2022 or (MAJOR_VERSION == 2022 and MINOR_VERSION >= 8):
+    if (MAJOR_VERSION, MINOR_VERSION) >= (2022, 8):
         # >=2022.8
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     else:
@@ -110,5 +109,3 @@ async def entry_update_listener(hass: HomeAssistant, entry: ConfigEntry):
         or entry.options.get(CONF_EXPORT_SCENES, False) != gateway.export_scenes
     ):
         await hass.config_entries.async_reload(entry.entry_id)
-    else:
-        gateway.debug = entry.options.get(CONF_DEBUG, False)

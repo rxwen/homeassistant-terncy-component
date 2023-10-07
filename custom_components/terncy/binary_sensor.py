@@ -1,7 +1,7 @@
 """Binary sensor platform support for Terncy."""
 import logging
 from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,

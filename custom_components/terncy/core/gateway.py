@@ -39,7 +39,6 @@ from ..const import (
     ACTION_PRESSED,
     ACTION_ROTATION,
     ACTION_SINGLE_PRESS,
-    CONF_DEBUG,
     CONF_DEVID,
     CONF_EXPORT_DEVICE_GROUPS,
     CONF_EXPORT_SCENES,
@@ -112,7 +111,6 @@ class TerncyGateway:
         )
 
         # region 配置项
-        self.debug = config_entry.options.get(CONF_DEBUG, False)
         self.export_device_groups = config_entry.options.get(
             CONF_EXPORT_DEVICE_GROUPS, True
         )

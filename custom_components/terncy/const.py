@@ -47,7 +47,6 @@ CONF_DEVID = "dev_id"
 CONF_NAME = "dn"
 CONF_IP = "ip"
 
-CONF_DEBUG = "debug"
 CONF_EXPORT_DEVICE_GROUPS = "export_device_groups"
 CONF_EXPORT_SCENES = "export_scenes"
 
@@ -132,6 +131,4 @@ class TerncyDeviceData(TypedDict):
     attributes: list[AttrValue]
 
 
-HAS_EVENT_PLATFORM = MAJOR_VERSION > 2023 or (
-    MAJOR_VERSION == 2023 and MINOR_VERSION >= 8
-)  # HA>=2023.8
+HAS_EVENT_PLATFORM = (MAJOR_VERSION, MINOR_VERSION) >= (2023, 8)  # HA>=2023.8
