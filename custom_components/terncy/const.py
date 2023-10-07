@@ -28,23 +28,27 @@ PROFILE_YAN_BUTTON = 6
 PROFILE_SMART_DIAL = 7
 PROFILE_COLOR_LIGHT = 8
 
-PROFILE_LOCK = 11
+PROFILE_11_LOCK = 11  # lockState, battery
 PROFILE_EXTENDED_COLOR_LIGHT = 12
 PROFILE_COLOR_TEMPERATURE_LIGHT = 13
 
 PROFILE_HA_TEMPERATURE_HUMIDITY = 15
 # PROFILE_16 = 16  # todo volume, playState, mute
 PROFILE_DIMMABLE_COLOR_TEMPERATURE_LIGHT = 17
-# PROFILE_18 = 18  # todo motion
+PROFILE_18 = 18  # motion, [battery, motionL, motionR]
 PROFILE_DIMMABLE_LIGHT = 19
 PROFILE_DIMMABLE_LIGHT2 = 20
 # PROFILE_21 = 21  # todo SM0202 iasZoneStatus, battery
+PROFILE_24_GAS = 24  # iasZoneStatus
 PROFILE_COLOR_DIMMABLE_LIGHT = 26
 PROFILE_EXTENDED_COLOR_LIGHT2 = 27
 
 CONF_DEVID = "dev_id"
 CONF_NAME = "dn"
 CONF_IP = "ip"
+
+CONF_EXPORT_DEVICE_GROUPS = "export_device_groups"
+CONF_EXPORT_SCENES = "export_scenes"
 
 ACTION_SINGLE_PRESS = "single_press"
 ACTION_DOUBLE_PRESS = "double_press"
@@ -103,13 +107,28 @@ class TerncyEntityDescription(EntityDescription):
     sub_key: str | None = None
     """用作 unique_id 的后缀。"""
 
+    unique_id_prefix: str | None = None
+    """用作 unique_id 的前缀。（目前只给scene用，考虑有没有更好的方式）"""
+
     old_unique_id_suffix: str | None = None  # use for migrate
 
-    translation_key: str | None = None  # <2023.1 需要这一行
+    translation_key: str | None = None  # <2023.1 需要这一行，避免报错
+
+    required_attrs: list[str] | None = None
+    """需要的属性，如果没有这些属性，就不创建实体"""
 
 
-HAS_EVENT_PLATFORM = MAJOR_VERSION > 2023 or (
-    MAJOR_VERSION == 2023 and MINOR_VERSION >= 8
-)  # HA>=2023.8
+class TerncyDeviceData(TypedDict):
+    name: str
+    model: str
+    did: str
+    sw_version: str | None
+    hw_version: str | None
+    descriptions: list[TerncyEntityDescription]
+    triggers: list[dict[str, str]]
 
-ENABLE_TERNCY_SCENE = False  # debug
+    online: bool
+    attributes: list[AttrValue]
+
+
+HAS_EVENT_PLATFORM = (MAJOR_VERSION, MINOR_VERSION) >= (2023, 8)  # HA>=2023.8

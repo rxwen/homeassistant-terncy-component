@@ -42,17 +42,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
         if description.key == KEY_WALL_SWITCH:
-            return TerncyWallSwitch(gateway, device, description)
+            return TerncyWallSwitch(gateway, eid, description)
 
         if description.key == KEY_DISABLE_RELAY:
-            return DisableRelaySwitch(gateway, device, description)
+            return DisableRelaySwitch(gateway, eid, description)
 
         if description.key == KEY_DISABLED_RELAY_STATUS:
-            return DisabledRelayStatusSwitch(gateway, device, description)
+            return DisabledRelayStatusSwitch(gateway, eid, description)
 
-        return TerncyCommonSwitch(gateway, device, description)
+        return TerncyCommonSwitch(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(Platform.SWITCH, create_entity_setup(async_add_entities, new_entity))
@@ -65,7 +65,7 @@ class TerncyCommonSwitch(TerncyEntity, SwitchEntity):
 
     def update_state(self, attrs: list[AttrValue]):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (
             value := get_attr_value(attrs, self.entity_description.value_attr)
         ) is not None:
@@ -76,7 +76,7 @@ class TerncyCommonSwitch(TerncyEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         self._attr_is_on = True
         await self.api.set_attribute(
-            self.serial_number,
+            self.eid,
             self.entity_description.value_attr,
             self.attr_value_on,
         )
@@ -85,7 +85,7 @@ class TerncyCommonSwitch(TerncyEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         self._attr_is_on = False
         await self.api.set_attribute(
-            self.serial_number,
+            self.eid,
             self.entity_description.value_attr,
             self.attr_value_off,
         )
@@ -107,7 +107,7 @@ class TerncyWallSwitch(TerncyCommonSwitch):
 
     def update_state(self, attrs: list[AttrValue]):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         for av in attrs:
             if av["attr"] == ATTR_ON:
                 self._attr_is_on = av["value"] == 1
@@ -130,7 +130,7 @@ class DisableRelaySwitch(TerncyCommonSwitch):
 
     def update_state(self, attrs: list[AttrValue]):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         for av in attrs:
             if av["attr"] == ATTR_PURE_INPUT:
                 self._pure_input = av["value"] == 1
@@ -155,7 +155,7 @@ class DisabledRelayStatusSwitch(TerncyCommonSwitch):
 
     def update_state(self, attrs: list[AttrValue]):
         """Update terncy state."""
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         for av in attrs:
             if av["attr"] == ATTR_PURE_INPUT:
                 self._pure_input = av["value"] == 1

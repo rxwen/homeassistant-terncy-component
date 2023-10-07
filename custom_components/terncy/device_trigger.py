@@ -55,11 +55,11 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     triggers: list[dict[str, str]] = []
 
     # Determine which triggers are supported by this device_id ...
-    serial_number = min(device_entry.identifiers)[1]
-    _LOGGER.debug("async_get_triggers %s %s", device_id, serial_number)
+    eid = min(device_entry.identifiers)[1]
+    _LOGGER.debug("async_get_triggers %s %s", device_id, eid)
     for gateway in hass.data[DOMAIN].values():
         for device in gateway.parsed_devices.values():
-            if serial_number == device.serial_number:
+            if eid == device.eid:
                 triggers.extend(device.get_triggers(device_id))
 
     return triggers
@@ -76,11 +76,11 @@ async def async_attach_trigger(
     device_id: str = config[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
     device_entry: DeviceEntry = device_registry.async_get(device_id)
-    serial_number = min(device_entry.identifiers)[1]
+    eid = min(device_entry.identifiers)[1]
 
     event_data = {
         CONF_DEVICE_ID: device_id,
-        EVENT_DATA_SOURCE: serial_number,
+        EVENT_DATA_SOURCE: eid,
     }
 
     if config[CONF_TYPE] == ACTION_LONG_PRESS:
