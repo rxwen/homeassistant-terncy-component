@@ -7,6 +7,9 @@ from homeassistant.helpers.entity import EntityCategory  # <2023.3
 
 from ..binary_sensor import TerncyBinarySensorDescription
 from ..const import (
+    PROFILE_11_LOCK,
+    PROFILE_18,
+    PROFILE_24_GAS,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -145,9 +148,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.HS},
         ),
     ],
-    # PROFILE_LOCK: [
-    #     # todo
-    # ],
+    PROFILE_11_LOCK: [
+        TerncyBinarySensorDescription(
+            key="lock",
+            device_class=BinarySensorDeviceClass.LOCK,
+            name=None,
+            value_attr="lockState",
+            value_map={1: False, 2: True},
+        ),
+        BatteryDescription(name="Battery"),
+    ],
     PROFILE_EXTENDED_COLOR_LIGHT: [
         TerncyLightDescription(
             color_mode=ColorMode.HS,
@@ -171,6 +181,34 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.COLOR_TEMP},
         ),
     ],
+    PROFILE_18: [
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+            value_attr="motion",
+        ),
+        BatteryDescription(
+            name="Battery",
+            required_attrs=["battery"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionl",
+            device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion Left",
+            value_attr="motionL",
+            required_attrs=["motionL"],
+        ),
+        TerncyBinarySensorDescription(
+            key="motion",
+            sub_key="motionr",
+            device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion Right",
+            value_attr="motionR",
+            required_attrs=["motionR"],
+        ),
+    ],
     PROFILE_DIMMABLE_LIGHT: [
         TerncyLightDescription(
             color_mode=ColorMode.BRIGHTNESS,
@@ -181,6 +219,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.BRIGHTNESS,
             supported_color_modes={ColorMode.BRIGHTNESS},
+        ),
+    ],
+    PROFILE_24_GAS: [
+        TerncyBinarySensorDescription(
+            key="gas",
+            sub_key="gas",
+            device_class=BinarySensorDeviceClass.GAS,
+            name=None,
+            value_attr="iasZoneStatus",
+            value_map={32: False, 33: True},
         ),
     ],
     PROFILE_COLOR_DIMMABLE_LIGHT: [

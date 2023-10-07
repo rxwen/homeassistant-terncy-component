@@ -46,8 +46,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
-        return TerncyEvent(gateway, device, description)
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyEvent(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(Platform.EVENT, create_entity_setup(async_add_entities, new_entity))
@@ -59,7 +59,7 @@ class TerncyEvent(TerncyEntity, EventEntity):
     entity_description: TerncyEventDescription
 
     def update_state(self, attrs):
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         # do nothing
         pass
 

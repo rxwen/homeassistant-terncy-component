@@ -56,5 +56,17 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "选项",
+        "data": {
+          "debug": "打印调试日志 （Debug Logging)",
+          "export_device_groups": "导出设备组",
+          "export_scenes": "把小燕APP里的场景作为开关导出"
+        }
+      }
+    }
   }
 }

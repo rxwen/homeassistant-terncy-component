@@ -7,19 +7,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceEntry
 
-from .const import DOMAIN, HAS_EVENT_PLATFORM, TERNCY_MANU_NAME
+from .const import (
+    CONF_EXPORT_DEVICE_GROUPS,
+    CONF_EXPORT_SCENES,
+    DOMAIN,
+    HAS_EVENT_PLATFORM,
+    TERNCY_MANU_NAME,
+)
 from .core.gateway import TerncyGateway
 from .hub_monitor import TerncyHubManager
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.SWITCH,
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
     # Platform.EVENT,  # >=2023.8
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 if HAS_EVENT_PLATFORM:
     PLATFORMS.append(Platform.EVENT)
@@ -33,8 +40,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Terncy from a config entry."""
-    _LOGGER.debug("async_setup_entry %s", entry.unique_id)
+    _LOGGER.debug("async_setup_entry %s, %s", entry.unique_id, entry.options)
     hass.data.setdefault(DOMAIN, {})
+
+    entry.async_on_unload(entry.add_update_listener(entry_update_listener))
 
     hub_manager = TerncyHubManager.instance(hass)
     await hub_manager.start_discovery()
@@ -52,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=gateway.name,
     )
 
-    if MAJOR_VERSION > 2022 or (MAJOR_VERSION == 2022 and MINOR_VERSION >= 8):
+    if (MAJOR_VERSION, MINOR_VERSION) >= (2022, 8):
         # >=2022.8
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     else:
@@ -88,3 +97,15 @@ async def async_remove_config_entry_device(
         device_entry.id,
     )
     return True
+
+
+async def entry_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    # https://developers.home-assistant.io/docs/config_entries_options_flow_handler/#signal-updates
+    _LOGGER.debug("[%s] Options updated: %s", entry.unique_id, entry.options)
+    gateway: TerncyGateway = hass.data[DOMAIN][entry.entry_id]
+    if (
+        entry.options.get(CONF_EXPORT_DEVICE_GROUPS, True)
+        != gateway.export_device_groups
+        or entry.options.get(CONF_EXPORT_SCENES, False) != gateway.export_scenes
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)

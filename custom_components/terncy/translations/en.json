@@ -81,5 +81,17 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "data": {
+          "debug": "Debug Logging",
+          "export_device_groups": "Export device groups",
+          "export_scenes": "Export scenes as switches"
+        }
+      }
+    }
   }
 }

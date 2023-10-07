@@ -45,8 +45,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    def new_entity(gateway, device, description: TerncyEntityDescription):
-        return TerncyLight(gateway, device, description)
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyLight(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
     gw.add_setup(Platform.LIGHT, create_entity_setup(async_add_entities, new_entity))
@@ -66,8 +66,8 @@ class TerncyLight(TerncyEntity, LightEntity):
     _attr_supported_color_modes: set[ColorMode] | set[str] | None
     _attr_supported_features: LightEntityFeature
 
-    def __init__(self, gateway, device, description: TerncyLightDescription):
-        super().__init__(gateway, device, description)
+    def __init__(self, gateway, eid: str, description: TerncyLightDescription):
+        super().__init__(gateway, eid, description)
         self._attr_brightness = 0
         self._attr_color_mode = description.color_mode
         self._attr_color_temp = 0
@@ -76,7 +76,7 @@ class TerncyLight(TerncyEntity, LightEntity):
         self._attr_supported_features = description.supported_features
 
     def update_state(self, attrs):
-        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (on_off := get_attr_value(attrs, "on")) is not None:
             self._attr_is_on = on_off == 1
         bri = get_attr_value(attrs, "brightness")
@@ -97,7 +97,7 @@ class TerncyLight(TerncyEntity, LightEntity):
             self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
-        _LOGGER.debug("async_turn_on %s", kwargs)
+        _LOGGER.debug("%s async_turn_on %s", self.eid, kwargs)
 
         attrs = [{"attr": "on", "value": 1}]
         self._attr_is_on = True
@@ -125,11 +125,11 @@ class TerncyLight(TerncyEntity, LightEntity):
             attrs.append({"attr": "saturation", "value": terncy_sat})
             self._attr_hs_color = hs_color
 
-        await self.api.set_attributes(self.serial_number, attrs)
+        await self.api.set_attributes(self.eid, attrs)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        _LOGGER.debug("async_turn_off %s", kwargs)
+        _LOGGER.debug("%s async_turn_off %s", self.eid, kwargs)
         self._attr_is_on = False
-        await self.api.set_attribute(self.serial_number, "on", 0)
+        await self.api.set_attribute(self.eid, "on", 0)
         self.async_write_ha_state()
