@@ -53,7 +53,15 @@ homeassistant_configuration_root
 
 ## Installation via [HACS](https://hacs.xyz/)
 
-1. Pending
+- [Install hacs](https://hacs.xyz/docs/setup/download) for the HA.
+- Go to HACS page in your HA.
+- Click the triple dot icon in the top right corner, then select Custom repositories.
+- Input "https://github.com/rxwen/homeassistant-terncy-component" in the Repository, and select Integration in the Category. Then click Add.
+- Click the Integration button in the bottom right corner of HACS page.
+- Input "terncy" to search for Terncy component and click the search result to view detail.
+- Click the Download button in the bottom right corner to view download details.
+- Select the most recent verion and Download the component.
+- Restart HA.
 
 
 ## Configuration
