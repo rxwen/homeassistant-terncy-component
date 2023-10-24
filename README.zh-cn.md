@@ -56,8 +56,8 @@ homeassistant_configuration_root
 - 在当前 HA 中[安装 HACS](https://hacs.xyz/docs/setup/download)。
 - 在 HA 中打开 HACS 管理页面。
 - 点击页面右上角的三个点图标，选择 Custom repositories 入口.
-- 在 Repository 输入框输入 https://github.com/rxwen/homeassistant-terncy-component，在类别中选择 Integration。点击添加。
-- 在 HACS 管理页面点击右下角 Integration 按钮。
+- 在 Repository 输入框输入 `https://github.com/rxwen/homeassistant-terncy-component`，在类别中选择 Integration。点击添加。
+- 在 HACS 的 Integration 管理页面点击右下角添加按钮。
 - 在搜索框输入 "terncy" 搜索小燕插件，点击搜索结果进入详情页。
 - 点击页面右下角的下载按钮，查看下载详情。
 - 选择最新版本，点击下载安装插件。
