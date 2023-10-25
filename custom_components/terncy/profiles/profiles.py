@@ -6,10 +6,12 @@ from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import EntityCategory
 
 from ..binary_sensor import TerncyBinarySensorDescription
+from ..climate import TerncyClimateDescription
 from ..const import (
     EVENT_ENTITY_BUTTON_EVENTS,
     EVENT_ENTITY_DIAL_EVENTS,
     HAS_EVENT_PLATFORM,
+    PROFILE_AC_UNIT_MACHINE,
     PROFILE_11_LOCK,
     PROFILE_18,
     PROFILE_24_GAS,
@@ -154,6 +156,11 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.HS,
             supported_color_modes={ColorMode.HS},
+        ),
+    ],
+    PROFILE_AC_UNIT_MACHINE: [
+        TerncyClimateDescription(
+            key="climate",
         ),
     ],
     PROFILE_11_LOCK: [
