@@ -1,352 +1,181 @@
-"""Smart plug platform support for Terncy."""
+"""Switch platform support for Terncy."""
 import logging
-from homeassistant.helpers import device_registry as dr
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
-    DEVICE_CLASSES,
-    SwitchEntity,
-)
-from homeassistant.components.button import (
-    ButtonDeviceClass,
-    ButtonEntity,
-)
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_DOMAIN,
-    CONF_EVENT,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    TERNCY_MANU_NAME,
-    ACTION_SINGLE_PRESS,
-    ACTION_DOUBLE_PRESS,
-    ACTION_TRIPLE_PRESS,
-    ACTION_LONG_PRESS,
-)
+from .const import DOMAIN, TerncyEntityDescription
+from .core.entity import TerncyEntity, create_entity_setup
+from .types import AttrValue
 from .utils import get_attr_value
+
+if TYPE_CHECKING:
+    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ON = "on"
+ATTR_PURE_INPUT = "pureInput"
+ATTR_DISABLE_RELAY = "disableRelay"
+ATTR_DISABLED_RELAY_STATUS = "disabledRelayStatus"
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Terncy smart plugs.
-
-    Can only be called when a user accidentally mentions Terncy platform in their
-    config. But even in that case it would have been ignored.
-    """
-    _LOGGER.info(" terncy smart plug async_setup_platform")
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Terncy smart plugs from a config entry."""
-    _LOGGER.info("setup terncy smart plug platform")
+KEY_WALL_SWITCH = "wall_switch"
+KEY_DISABLE_RELAY = "disable_relay"
+KEY_DISABLED_RELAY_STATUS = "disabled_relay_status"
 
 
-class TerncySmartPlug(SwitchEntity):
-    """Representation of a Terncy smart plug."""
+@dataclass(slots=True)
+class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
+    PLATFORM: Platform = Platform.SWITCH
+    has_entity_name: bool = True
+    value_attr: str = "on"
+    invert_state: bool = False
 
-    def __init__(self, api, devid, name, model, version, features):
-        """Initialize the smart plug."""
-        self._device_id = devid
-        self.hub_id = api.dev_id
-        self._name = name
-        self.model = model
-        self.version = version
-        self.api = api
-        self.is_available = False
-        self._features = features
-        self._onoff = False
 
-    def update_state(self, attrs):
-        """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
-        on_off = get_attr_value(attrs, "on")
-        if on_off is not None:
-            self._onoff = on_off == 1
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        if description.key == KEY_WALL_SWITCH:
+            return TerncyWallSwitch(gateway, eid, description)
 
-    @property
-    def unique_id(self):
-        """Return terncy unique id."""
-        return self._device_id
+        if description.key == KEY_DISABLE_RELAY:
+            return DisableRelaySwitch(gateway, eid, description)
 
-    @property
-    def device_id(self):
-        """Return terncy device id."""
-        return self._device_id
+        if description.key == KEY_DISABLED_RELAY_STATUS:
+            return DisabledRelayStatusSwitch(gateway, eid, description)
 
-    @property
-    def device_class(self):
-        """Return if terncy device is available."""
-        return DEVICE_CLASS_OUTLET
+        return TerncyCommonSwitch(gateway, eid, description)
 
-    @property
-    def name(self):
-        """Return terncy device name."""
-        return self._name
+    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
+    gw.add_setup(Platform.SWITCH, create_entity_setup(async_add_entities, new_entity))
 
-    @property
-    def is_on(self):
-        """Return if terncy device is on."""
-        return self._onoff
 
-    @property
-    def available(self):
-        """Return if terncy device is available."""
-        return self.is_available
+class TerncyCommonSwitch(TerncyEntity, SwitchEntity):
+    """Represents a Terncy Switch."""
 
-    @property
-    def supported_features(self):
-        """Return the terncy device feature."""
-        return self._features
+    entity_description: TerncySwitchDescription
 
-    @property
-    def device_info(self):
-        """Return the terncy device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
-            "name": self.name,
-            "manufacturer": TERNCY_MANU_NAME,
-            "model": self.model,
-            "sw_version": self.version,
-            "via_device": (DOMAIN, self.hub_id),
-        }
+    def update_state(self, attrs: list[AttrValue]):
+        """Update terncy state."""
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        if (
+            value := get_attr_value(attrs, self.entity_description.value_attr)
+        ) is not None:
+            self._attr_is_on = value == self.attr_value_on
+        if self.hass:
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
-        """Turn on terncy smart plug."""
-        _LOGGER.info("turn on %s", kwargs)
-        self._onoff = True
-        await self.api.set_onoff(self._device_id, 1)
+        self._attr_is_on = True
+        await self.api.set_attribute(
+            self.eid,
+            self.entity_description.value_attr,
+            self.attr_value_on,
+        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Turn off terncy smart plug."""
-        _LOGGER.info("turn off")
-        self._onoff = False
-        await self.api.set_onoff(self._device_id, 0)
+        self._attr_is_on = False
+        await self.api.set_attribute(
+            self.eid,
+            self.entity_description.value_attr,
+            self.attr_value_off,
+        )
         self.async_write_ha_state()
 
-
-class TerncySwitch(SwitchEntity):
-    """Representation of a Terncy Switch."""
-
-    def __init__(self, api, devid, name, model, version, features):
-        """Initialize the switch."""
-        self._device_id = devid
-        self.hub_id = api.dev_id
-        self._name = name
-        self.model = model
-        self.version = version
-        self.api = api
-        self.is_available = False
-        self._features = features
-        self._onoff = False
-
-    def update_state(self, attrs):
-        """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
-        on_off = get_attr_value(attrs, "on")
-        if on_off is not None:
-            self._onoff = on_off == 1
+    @property
+    def attr_value_on(self):
+        return 1 if not self.entity_description.invert_state else 0
 
     @property
-    def unique_id(self):
-        """Return terncy unique id."""
-        return self._device_id
+    def attr_value_off(self):
+        return 0 if not self.entity_description.invert_state else 1
+
+
+class TerncyWallSwitch(TerncyCommonSwitch):
+    """Represents a Terncy Wall Switch"""
+
+    _disableRelay: bool | None = None
+
+    def update_state(self, attrs: list[AttrValue]):
+        """Update terncy state."""
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        for av in attrs:
+            if av["attr"] == ATTR_ON:
+                self._attr_is_on = av["value"] == 1
+            elif av["attr"] == ATTR_DISABLE_RELAY:
+                self._disableRelay = av["value"] == 1
+        if self.hass:
+            self.async_write_ha_state()
 
     @property
-    def device_id(self):
-        """Return terncy device id."""
-        return self._device_id
+    def available(self) -> bool:
+        if self._disableRelay:
+            return False
+        return self._attr_available
+
+
+class DisableRelaySwitch(TerncyCommonSwitch):
+    """Need pure_input enabled"""
+
+    _pure_input: bool | None = None
+
+    def update_state(self, attrs: list[AttrValue]):
+        """Update terncy state."""
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        for av in attrs:
+            if av["attr"] == ATTR_PURE_INPUT:
+                self._pure_input = av["value"] == 1
+            elif av["attr"] == ATTR_DISABLE_RELAY:
+                self._attr_is_on = av["value"] == 1
+        if self.hass:
+            self.async_write_ha_state()
 
     @property
-    def device_class(self):
-        """Return if terncy device is available."""
-        return DEVICE_CLASS_SWITCH
+    def available(self) -> bool:
+        if self._pure_input:
+            return self._attr_available
+        else:
+            return False
+
+
+class DisabledRelayStatusSwitch(TerncyCommonSwitch):
+    """Need pure_input and disable_relay all enabled"""
+
+    _pure_input: bool | None = None
+    _disableRelay: bool | None = None
+
+    def update_state(self, attrs: list[AttrValue]):
+        """Update terncy state."""
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        for av in attrs:
+            if av["attr"] == ATTR_PURE_INPUT:
+                self._pure_input = av["value"] == 1
+            elif av["attr"] == ATTR_DISABLE_RELAY:
+                self._disableRelay = av["value"] == 1
+            elif av["attr"] == ATTR_DISABLED_RELAY_STATUS:
+                self._attr_is_on = av["value"] == 1
+        if self.hass:
+            self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return terncy device name."""
-        return self._name
+    def available(self) -> bool:
+        if self._pure_input and self._disableRelay:
+            return self._attr_available
+        else:
+            return False
 
     @property
-    def is_on(self):
-        """Return if terncy device is on."""
-        return self._onoff
-
-    @property
-    def available(self):
-        """Return if terncy device is available."""
-        return self.is_available
-
-    @property
-    def supported_features(self):
-        """Return the terncy device feature."""
-        return self._features
-
-    @property
-    def device_info(self):
-        """Return the terncy device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
-            "name": self.name,
-            "manufacturer": TERNCY_MANU_NAME,
-            "model": self.model,
-            "sw_version": self.version,
-            "via_device": (DOMAIN, self.hub_id),
-        }
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on terncy smart plug."""
-        _LOGGER.info("turn on %s", kwargs)
-        self._onoff = True
-        await self.api.set_onoff(self._device_id, 1)
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off terncy smart plug."""
-        _LOGGER.info("turn off")
-        self._onoff = False
-        await self.api.set_onoff(self._device_id, 0)
-        self.async_write_ha_state()
-
-    def get_trigger(self, id):
-        return [
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_SINGLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_DOUBLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_TRIPLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_LONG_PRESS,
-            },
-        ]
-
-class TerncyButton(ButtonEntity):
-    """Representation of a Terncy Stateless Button."""
-
-    _attr_device_class = ButtonDeviceClass.RESTART
-
-    def __init__(self, api, devid, name, model, version, features):
-        """Initialize the button."""
-        _LOGGER.info("create terncybutton AAA slkdjfslkdfj")
-        self._device_id = devid
-        self.hub_id = api.dev_id
-        self._name = name
-        self.model = model
-        self.version = version
-        self.api = api
-        self.is_available = False
-        self._features = features
-        self._onoff = False
-
-    def update_state(self, attrs):
-        """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
-        on_off = get_attr_value(attrs, "on")
-        if on_off is not None:
-            self._onoff = on_off == 1
-
-    @property
-    def unique_id(self):
-        """Return terncy unique id."""
-        return self._device_id
-
-    @property
-    def device_id(self):
-        """Return terncy device id."""
-        return self._device_id
-
-    @property
-    def device_class(self):
-        return ButtonDeviceClass.UPDATE.value
-
-    @property
-    def name(self):
-        """Return terncy device name."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return if terncy device is available."""
-        return self.is_available
-
-    @property
-    def supported_features(self):
-        """Return the terncy device feature."""
-        return self._features
-
-    @property
-    def device_info(self):
-        """Return the terncy device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
-            "name": self.name,
-            "manufacturer": TERNCY_MANU_NAME,
-            "model": self.model,
-            "sw_version": self.version,
-            "via_device": (DOMAIN, self.hub_id),
-        }
-
-    def get_trigger(self, id):
-        return [
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_SINGLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_DOUBLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_TRIPLE_PRESS,
-            },
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: ACTION_LONG_PRESS,
-            },
-        ]
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on terncy button."""
-        _LOGGER.info("no need to turn on")
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off terncy button."""
-        _LOGGER.info("no need to turn off")
-
-    async def async_press(self) -> None:
-        _LOGGER.info(" terncy button pressed, nothing to do")
+    def icon(self) -> str | None:
+        if self.is_on:
+            return "mdi:electric-switch-closed"
+        else:
+            return "mdi:electric-switch"

@@ -1,196 +1,135 @@
 """Light platform support for Terncy."""
 import logging
-from homeassistant.helpers import device_registry as dr
+import math
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_FLASH,
+    ColorMode,  # >=2022.5
     LightEntity,
+    LightEntityDescription,
+    LightEntityFeature,  # >=2022.5
 )
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_DOMAIN,
-    CONF_EVENT,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
-from .const import (
-    DOMAIN,
-    TERNCY_MANU_NAME,
-)
+from .const import DOMAIN, TerncyEntityDescription
+from .core.entity import TerncyEntity, create_entity_setup
 from .utils import get_attr_value
+
+if TYPE_CHECKING:
+    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_TERNCY_ON_OFF = SUPPORT_FLASH
-SUPPORT_TERNCY_DIMMABLE = SUPPORT_TERNCY_ON_OFF | SUPPORT_BRIGHTNESS
-SUPPORT_TERNCY_CT = SUPPORT_TERNCY_DIMMABLE | SUPPORT_COLOR_TEMP
-SUPPORT_TERNCY_COLOR = SUPPORT_TERNCY_DIMMABLE | SUPPORT_COLOR
-SUPPORT_TERNCY_EXTENDED = SUPPORT_TERNCY_DIMMABLE | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+
+@dataclass(slots=True)
+class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
+    key: str = "light"
+    PLATFORM: Platform = Platform.LIGHT
+    has_entity_name: bool = True
+    name: str | UndefinedType | None = None
+    color_mode: ColorMode | None = None
+    supported_color_modes: set[ColorMode] | None = None
+    supported_features: LightEntityFeature = 0
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Terncy lights.
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyLight(gateway, eid, description)
 
-    Can only be called when a user accidentally mentions Terncy platform in their
-    config. But even in that case it would have been ignored.
-    """
-    _LOGGER.info(" terncy light async_setup_platform")
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Terncy lights from a config entry."""
-    _LOGGER.info("setup terncy light platform")
+    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
+    gw.add_setup(Platform.LIGHT, create_entity_setup(async_add_entities, new_entity))
 
 
-class TerncyLight(LightEntity):
-    """Representation of a Terncy light."""
+class TerncyLight(TerncyEntity, LightEntity):
+    """Represents a Terncy light."""
 
-    def __init__(self, api, devid, name, model, version, features):
-        """Initialize the light."""
-        self._device_id = devid
-        self.hub_id = api.dev_id
-        self._name = name
-        self.model = model
-        self.version = version
-        self.api = api
-        self.is_available = False
-        self._features = features
-        self._onoff = False
-        self._ct = 0
-        self._hs = (0, 0)
-        self._bri = 0
+    entity_description: TerncyLightDescription
 
-    def get_trigger(self, id):
-        return []
+    _attr_brightness: int | None = None
+    _attr_color_mode: ColorMode | str | None
+    _attr_color_temp: int | None = None
+    _attr_max_mireds: int = 400  # 2500 K
+    _attr_min_mireds: int = 153  # 6500 K
+    _attr_hs_color: tuple[float, float] | None = None
+    _attr_supported_color_modes: set[ColorMode] | set[str] | None
+    _attr_supported_features: LightEntityFeature
+
+    def __init__(self, gateway, eid: str, description: TerncyLightDescription):
+        super().__init__(gateway, eid, description)
+        self._attr_brightness = 0
+        self._attr_color_mode = description.color_mode
+        self._attr_color_temp = 0
+        self._attr_hs_color = (0, 0)
+        self._attr_supported_color_modes = description.supported_color_modes
+        self._attr_supported_features = description.supported_features
 
     def update_state(self, attrs):
-        """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
-        on_off = get_attr_value(attrs, "on")
-        if on_off is not None:
-            self._onoff = on_off == 1
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        if (on_off := get_attr_value(attrs, "on")) is not None:
+            self._attr_is_on = on_off == 1
         bri = get_attr_value(attrs, "brightness")
         if bri:
-            self._bri = int(bri / 100 * 255)
+            self._attr_brightness = int(bri / 100 * 255)
         color_temp = get_attr_value(attrs, "colorTemperature")
         if color_temp is not None:
-            self._ct = color_temp
+            self._attr_color_temp = color_temp
         hue = get_attr_value(attrs, "hue")
         sat = get_attr_value(attrs, "saturation")
         if hue is not None:
             hue = hue / 255 * 360.0
-            self._hs = (hue, self._hs[1])
+            self._attr_hs_color = (hue, self._attr_hs_color[1])
         if sat is not None:
             sat = sat / 255 * 100
-            self._hs = (self._hs[0], sat)
-
-    @property
-    def unique_id(self):
-        """Return terncy unique id."""
-        return self._device_id
-
-    @property
-    def device_id(self):
-        """Return terncy device id."""
-        return self._device_id
-
-    @property
-    def name(self):
-        """Return terncy device name."""
-        return self._name
-
-    @property
-    def brightness(self):
-        """Return terncy device brightness."""
-        return self._bri
-
-    @property
-    def hs_color(self):
-        """Return terncy device color."""
-        return self._hs
-
-    @property
-    def color_temp(self):
-        """Return terncy device color temperature."""
-        return self._ct
-
-    @property
-    def min_mireds(self):
-        """Return terncy device min mireds."""
-        return 50
-
-    @property
-    def max_mireds(self):
-        """Return terncy device max mireds."""
-        return 400
-
-    @property
-    def is_on(self):
-        """Return if terncy device is on."""
-        return self._onoff
-
-    @property
-    def available(self):
-        """Return if terncy device is available."""
-        return self.is_available
-
-    @property
-    def supported_features(self):
-        """Return the terncy device feature."""
-        return self._features
-
-    @property
-    def device_info(self):
-        """Return the terncy device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
-            "name": self.name,
-            "manufacturer": TERNCY_MANU_NAME,
-            "model": self.model,
-            "sw_version": self.version,
-            "via_device": (DOMAIN, self.hub_id),
-        }
+            self._attr_hs_color = (self._attr_hs_color[0], sat)
+        if self.hass:
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
-        """Turn on terncy light."""
-        _LOGGER.info("turn on %s", kwargs)
-        await self.api.set_onoff(self._device_id, 1)
-        self._onoff = True
+        _LOGGER.debug("%s async_turn_on %s", self.eid, kwargs)
+
+        attrs = [{"attr": "on", "value": 1}]
+        self._attr_is_on = True
+
         if ATTR_BRIGHTNESS in kwargs:
             bri = kwargs.get(ATTR_BRIGHTNESS)
-            terncy_bri = int(bri / 255 * 100)
-            await self.api.set_attribute(self._device_id, "brightness", terncy_bri, 0)
-            self._bri = bri
+            terncy_bri = math.ceil(bri / 255 * 100)
+            attrs.append({"attr": "brightness", "value": terncy_bri})
+            self._attr_brightness = bri
+
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs.get(ATTR_COLOR_TEMP)
             if color_temp < 50:
                 color_temp = 50
             if color_temp > 400:
                 color_temp = 400
-            await self.api.set_attribute(
-                self._device_id, "colorTemperature", color_temp, 0
-            )
-            self._ct = color_temp
+            attrs.append({"attr": "colorTemperature", "value": color_temp})
+            self._attr_color_temp = color_temp
+
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs.get(ATTR_HS_COLOR)
             terncy_hue = int(hs_color[0] / 360 * 255)
             terncy_sat = int(hs_color[1] / 100 * 255)
-            await self.api.set_attribute(self._device_id, "hue", terncy_hue, 0)
-            await self.api.set_attribute(self._device_id, "sat", terncy_sat, 0)
-            self._hs = hs_color
+            attrs.append({"attr": "hue", "value": terncy_hue})
+            attrs.append({"attr": "saturation", "value": terncy_sat})
+            self._attr_hs_color = hs_color
+
+        await self.api.set_attributes(self.eid, attrs)
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Turn off terncy light."""
-        _LOGGER.info("turn off %s", kwargs)
-        self._onoff = False
-        await self.api.set_onoff(self._device_id, 0)
+        _LOGGER.debug("%s async_turn_off %s", self.eid, kwargs)
+        self._attr_is_on = False
+        await self.api.set_attribute(self.eid, "on", 0)
         self.async_write_ha_state()

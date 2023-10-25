@@ -1,148 +1,162 @@
-"""Curtain platform support for Terncy."""
+"""Cover platform support for Terncy."""
 import logging
-from homeassistant.helpers import device_registry as dr
+from dataclasses import dataclass
+from typing import Any, TYPE_CHECKING
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASSES,
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    ATTR_TILT_POSITION,
     CoverEntity,
+    CoverEntityDescription,
+    CoverEntityFeature,  # >=2022.5
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, TERNCY_MANU_NAME
+from .const import DOMAIN, TerncyEntityDescription
+from .core.entity import TerncyEntity, create_entity_setup
 from .utils import get_attr_value
+
+if TYPE_CHECKING:
+    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Terncy curtain.
-
-    Can only be called when a user accidentally mentions Terncy platform in their
-    config. But even in that case it would have been ignored.
-    """
-    _LOGGER.info(" terncy curtain async_setup_platform")
+@dataclass(slots=True)
+class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
+    PLATFORM: Platform = Platform.COVER
+    has_entity_name: bool = True
+    name: str | UndefinedType | None = None
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Terncy curtain from a config entry."""
-    _LOGGER.info("setup terncy curtain platform")
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
+        return TerncyCover(gateway, eid, description)
+
+    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
+    gw.add_setup(Platform.COVER, create_entity_setup(async_add_entities, new_entity))
 
 
-class TerncyCurtain(CoverEntity):
-    """Representation of a Terncy curtain."""
+K_CURTAIN_PERCENT = "curtainPercent"
+K_CURTAIN_MOTOR_STATUS = "curtainMotorStatus"
+K_TILT_ANGLE = "tiltAngle"
 
-    def __init__(self, api, devid, name, model, version, features):
-        """Initialize the curtain."""
-        self._device_id = devid
-        self.hub_id = api.dev_id
-        self._name = name
-        self.model = model
-        self.version = version
-        self.api = api
-        self.is_available = False
-        self._features = features
-        self._percent = 0
+
+class TerncyCover(TerncyEntity, CoverEntity):
+    """Represents a Terncy Cover."""
+
+    entity_description: TerncyCoverDescription
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+    )
 
     def update_state(self, attrs):
-        """Updateterncy state."""
-        _LOGGER.info("update state event to %s", attrs)
-        percent = get_attr_value(attrs, "curtainPercent")
-        if percent is not None:
-            self._percent = percent
+        # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        if (value := get_attr_value(attrs, K_CURTAIN_PERCENT)) is not None:
+            self._attr_current_cover_position = value
+        if (motor_status := get_attr_value(attrs, K_CURTAIN_MOTOR_STATUS)) is not None:
+            self._attr_is_opening = motor_status == 1
+            self._attr_is_closing = motor_status == 2
+        if self.hass:
+            self.async_write_ha_state()
 
     @property
-    def unique_id(self):
-        """Return terncy unique id."""
-        return self._device_id
-
-    @property
-    def device_id(self):
-        """Return terncy device id."""
-        return self._device_id
-
-    @property
-    def name(self):
-        """Return terncy device name."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return if terncy device is on."""
-        return self._onoff
-
-    @property
-    def available(self):
-        """Return if terncy device is available."""
-        return self.is_available
-
-    @property
-    def device_class(self):
-        """Return if terncy device is available."""
-        return DEVICE_CLASS_BLIND
-
-    @property
-    def supported_features(self):
-        """Return the terncy device feature."""
-        return SUPPORT_SET_POSITION | SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def current_cover_position(self):
-        """Return if terncy device is available."""
-        return self._percent
-
-    @property
-    def is_closed(self):
-        """Return if terncy device is available."""
-        return self._percent == 0
-
-    @property
-    def is_opening(self):
-        """Return if terncy device is available."""
-        return False
-
-    @property
-    def is_closing(self):
-        """Return if terncy device is available."""
-        return False
-
-    @property
-    def current_cover_tilt_position(self):
-        """Return if terncy device is available."""
-        return None
-
-    @property
-    def device_info(self):
-        """Return the terncy device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "connections": {(dr.CONNECTION_ZIGBEE, self.device_id)},
-            "name": self.name,
-            "manufacturer": TERNCY_MANU_NAME,
-            "model": self.model,
-            "sw_version": self.version,
-            "via_device": (DOMAIN, self.hub_id),
-        }
-
-    async def async_close_cover(self, **kwargs):
-        """Turn on terncy curtain."""
-        _LOGGER.info("close cover %s", kwargs)
-        await self.api.set_attribute(self._device_id, "curtainPercent", 0, 0)
-        self.async_write_ha_state()
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed or not."""
+        return self._attr_current_cover_position == 0
 
     async def async_open_cover(self, **kwargs):
-        """Turn on terncy curtain."""
-        _LOGGER.info("close cover %s", kwargs)
-        await self.api.set_attribute(self._device_id, "curtainPercent", 100, 0)
+        """Open the cover."""
+        _LOGGER.debug("%s async_open_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, 100)
+        self.async_write_ha_state()
+
+    async def async_close_cover(self, **kwargs):
+        """Close cover."""
+        _LOGGER.debug("%s async_close_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, 0)
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs):
-        """Turn on terncy curtain."""
-        _LOGGER.info("set cover position %s", kwargs)
+        """Move the cover to a specific position."""
+        _LOGGER.debug("%s async_set_cover_position: %s", self.eid, kwargs)
         percent = kwargs[ATTR_POSITION]
-        await self.api.set_attribute(self._device_id, "curtainPercent", percent, 0)
+        await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, percent)
         self.async_write_ha_state()
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        _LOGGER.debug("%s async_stop_cover: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)
+        self.async_write_ha_state()
+
+
+class TerncyTiltCover(TerncyCover):
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    _tilt_angle: int | None = None  # -90~90
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        if self._tilt_angle is None:
+            return None
+        return 100 - round(abs(self._tilt_angle) / 0.9)
+
+    def update_state(self, attrs):
+        # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
+        if (tilt_angle := get_attr_value(attrs, K_TILT_ANGLE)) is not None:
+            self._tilt_angle = tilt_angle
+        super().update_state(attrs)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        _LOGGER.debug("%s async_open_cover_tilt: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_TILT_ANGLE, 0)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        _LOGGER.debug("%s async_close_cover_tilt: %s", self.eid, kwargs)
+        if self._tilt_angle is not None and self._tilt_angle < 0:
+            await self.api.set_attribute(self.eid, K_TILT_ANGLE, -90)
+        else:
+            await self.api.set_attribute(self.eid, K_TILT_ANGLE, 90)
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        _LOGGER.debug("%s async_set_cover_tilt_position: %s", self.eid, kwargs)
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+        if self._tilt_angle is not None and self._tilt_angle < 0:
+            tilt_angle = -90 + round(tilt_position * 0.9)
+        else:
+            tilt_angle = 90 - round(tilt_position * 0.9)
+        await self.api.set_attribute(self.eid, K_TILT_ANGLE, tilt_angle)
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        _LOGGER.debug("%s async_stop_cover_tilt: %s", self.eid, kwargs)
+        await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)

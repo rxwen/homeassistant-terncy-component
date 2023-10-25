@@ -10,7 +10,7 @@ terncy custome component for homeassistant
 ## Component Information
 
 - ha_iot_class: Local Push
-- ha_release: '2021.3.1'
+- ha_release: '2022.7.0'
 - ha_config_flow: true
 - ha_domain: terncy
 
@@ -87,9 +87,9 @@ Edit configuration.yaml file in home assistant config directory, add below conte
 default_config:
 
 logger:
-  default: info
+  default: warning
   logs:
-    homeassistant.components.terncy: debug
+    custom_components.terncy: debug
 
 ```
 
