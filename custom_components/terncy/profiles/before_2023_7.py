@@ -9,9 +9,6 @@ from ..binary_sensor import TerncyBinarySensorDescription
 from ..climate import TerncyClimateDescription
 from ..const import (
     PROFILE_AC_UNIT_MACHINE,
-    PROFILE_11_LOCK,
-    PROFILE_18,
-    PROFILE_24_GAS,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -22,7 +19,10 @@ from ..const import (
     PROFILE_DOOR_SENSOR,
     PROFILE_EXTENDED_COLOR_LIGHT,
     PROFILE_EXTENDED_COLOR_LIGHT2,
+    PROFILE_GAS,
     PROFILE_HA_TEMPERATURE_HUMIDITY,
+    PROFILE_LOCK,
+    PROFILE_OCCUPANCY_SENSOR,
     PROFILE_ONOFF_LIGHT,
     PROFILE_PIR,
     PROFILE_PLUG,
@@ -155,7 +155,7 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             key="climate",
         ),
     ],
-    PROFILE_11_LOCK: [
+    PROFILE_LOCK: [
         TerncyBinarySensorDescription(
             key="lock",
             device_class=BinarySensorDeviceClass.LOCK,
@@ -188,7 +188,7 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.COLOR_TEMP},
         ),
     ],
-    PROFILE_18: [
+    PROFILE_OCCUPANCY_SENSOR: [
         TerncyBinarySensorDescription(
             key="motion",
             sub_key="motion",
@@ -228,7 +228,7 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             supported_color_modes={ColorMode.BRIGHTNESS},
         ),
     ],
-    PROFILE_24_GAS: [
+    PROFILE_GAS: [
         TerncyBinarySensorDescription(
             key="gas",
             sub_key="gas",
