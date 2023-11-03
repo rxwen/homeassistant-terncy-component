@@ -67,7 +67,7 @@ homeassistant_configuration_root
 
 - 将本项目 git clone 到本地目录
 - `docker pull homeassistant/home-assistant:stable`
-- `run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
+- `docker run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
 
 
 ## 配置流程

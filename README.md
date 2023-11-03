@@ -67,7 +67,7 @@ homeassistant_configuration_root
 
 - Git clone current project to a local direcoty
 - `docker pull homeassistant/home-assistant:stable`
-- `run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
+- `docker run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
 
 ## Configuration
 
