@@ -41,7 +41,7 @@ async def async_setup_entry(
         return TerncyClimate(gateway, eid, description)
 
     gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.COVER, create_entity_setup(async_add_entities, new_entity))
+    gw.add_setup(Platform.CLIMATE, create_entity_setup(async_add_entities, new_entity))
 
 
 K_AC_MODE = "acMode"  # 制冷：1，除湿：2，通风：4，制热：8
