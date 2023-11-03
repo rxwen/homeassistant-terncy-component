@@ -63,6 +63,13 @@ homeassistant_configuration_root
 - 选择最新版本，点击下载安装插件。
 - 重启HA。
 
+## 通过 git 及 docker/podman 安装运行
+
+- 将本项目 git clone 到本地目录
+- `docker pull homeassistant/home-assistant:stable`
+- `run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
+
+
 ## 配置流程
 
 插件安装完成后，home assistant 可以自动发现网络中的小燕家庭中心。

@@ -63,6 +63,11 @@ homeassistant_configuration_root
 - Select the most recent verion and Download the component.
 - Restart HA.
 
+## Installation with git and docker/podman
+
+- Git clone current project to a local direcoty
+- `docker pull homeassistant/home-assistant:stable`
+- `run -it --rm --name ha --network=host -v PATH_TO_LOCAL_CLONED_GIT_REPOSITORY:/config/ homeassistant/home-assistant:stable`
 
 ## Configuration
 
