@@ -12,6 +12,8 @@ from ..const import (
     EVENT_ENTITY_DIAL_EVENTS,
     HAS_EVENT_PLATFORM,
     PROFILE_AC_UNIT_MACHINE,
+    PROFILE_HA_TEMPERATURE_HUMIDITY,
+    PROFILE_XY_SINGLE_AIR_COND,
     PROFILE_COLOR_DIMMABLE_LIGHT,
     PROFILE_COLOR_LIGHT,
     PROFILE_COLOR_TEMPERATURE_LIGHT,
@@ -159,6 +161,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         ),
     ],
     PROFILE_AC_UNIT_MACHINE: [
+        TerncyClimateDescription(
+            key="climate",
+        ),
+    ],
+    PROFILE_HA_THERMASTAT: [
+        TerncyClimateDescription(
+            key="climate",
+        ),
+    ],
+    PROFILE_XY_SINGLE_AIR_COND: [
         TerncyClimateDescription(
             key="climate",
         ),
