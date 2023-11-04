@@ -140,15 +140,19 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_RUNNING, 0)
         elif hvac_mode == HVACMode.COOL:
+            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_MODE, 1)
         elif hvac_mode == HVACMode.DRY:
+            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_MODE, 2)
         elif hvac_mode == HVACMode.FAN_ONLY:
+            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_MODE, 4)
         elif hvac_mode == HVACMode.HEAT:
+            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_MODE, 8)
         else:

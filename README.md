@@ -29,6 +29,7 @@ There is support for the following device type within Home Assistant:
 - Temperature Sensor
 - Humidity Sensor
 - Illuminance Sensor
+- Air Conditioner
 
 ## Manul Installation
 
