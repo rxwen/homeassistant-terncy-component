@@ -139,24 +139,22 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_RUNNING, 0)
-        elif hvac_mode == HVACMode.COOL:
-            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
-            self._attr_hvac_mode = hvac_mode
-            await self.api.set_attribute(self.eid, K_AC_MODE, 1)
-        elif hvac_mode == HVACMode.DRY:
-            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
-            self._attr_hvac_mode = hvac_mode
-            await self.api.set_attribute(self.eid, K_AC_MODE, 2)
-        elif hvac_mode == HVACMode.FAN_ONLY:
-            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
-            self._attr_hvac_mode = hvac_mode
-            await self.api.set_attribute(self.eid, K_AC_MODE, 4)
-        elif hvac_mode == HVACMode.HEAT:
-            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
-            self._attr_hvac_mode = hvac_mode
-            await self.api.set_attribute(self.eid, K_AC_MODE, 8)
         else:
-            _LOGGER.warning("Unsupported hvac_mode: %s", hvac_mode)
+            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
+            if hvac_mode == HVACMode.COOL:
+                self._attr_hvac_mode = hvac_mode
+                await self.api.set_attribute(self.eid, K_AC_MODE, 1)
+            elif hvac_mode == HVACMode.DRY:
+                self._attr_hvac_mode = hvac_mode
+                await self.api.set_attribute(self.eid, K_AC_MODE, 2)
+            elif hvac_mode == HVACMode.FAN_ONLY:
+                self._attr_hvac_mode = hvac_mode
+                await self.api.set_attribute(self.eid, K_AC_MODE, 4)
+            elif hvac_mode == HVACMode.HEAT:
+                self._attr_hvac_mode = hvac_mode
+                await self.api.set_attribute(self.eid, K_AC_MODE, 8)
+            else:
+                _LOGGER.warning("Unsupported hvac_mode: %s", hvac_mode)
         self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
