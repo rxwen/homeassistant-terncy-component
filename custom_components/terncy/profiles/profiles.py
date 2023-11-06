@@ -35,6 +35,7 @@ from ..const import (
     PROFILE_SMART_DIAL,
     PROFILE_SWITCH,
     PROFILE_YAN_BUTTON,
+    PROFILE_PRESENCE_SENSOR,
     TerncyEntityDescription,
 )
 from ..cover import TerncyCoverDescription
@@ -268,6 +269,13 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.HS,
             supported_color_modes={ColorMode.COLOR_TEMP, ColorMode.HS},
+        ),
+    ],
+    PROFILE_PRESENCE_SENSOR: [
+        TerncyBinarySensorDescription(
+            key="presenceStatus",
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            value_attr="presenceStatus",
         ),
     ],
 }
