@@ -144,19 +144,23 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
             self._attr_hvac_mode = hvac_mode
             await self.api.set_attribute(self.eid, K_AC_RUNNING, 0)
         else:
-            await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
+            attrs = [{"attr": K_AC_RUNNING, "value": 1}]
             if hvac_mode == HVACMode.COOL:
+                attrs.append({"attr": K_AC_MODE, "value": 1})
                 self._attr_hvac_mode = hvac_mode
-                await self.api.set_attribute(self.eid, K_AC_MODE, 1)
+                await self.api.set_attributes(self.eid, attrs)
             elif hvac_mode == HVACMode.DRY:
+                attrs.append({"attr": K_AC_MODE, "value": 2})
                 self._attr_hvac_mode = hvac_mode
-                await self.api.set_attribute(self.eid, K_AC_MODE, 2)
+                await self.api.set_attributes(self.eid, attrs)
             elif hvac_mode == HVACMode.FAN_ONLY:
+                attrs.append({"attr": K_AC_MODE, "value": 4})
                 self._attr_hvac_mode = hvac_mode
-                await self.api.set_attribute(self.eid, K_AC_MODE, 4)
+                await self.api.set_attributes(self.eid, attrs)
             elif hvac_mode == HVACMode.HEAT:
+                attrs.append({"attr": K_AC_MODE, "value": 8})
                 self._attr_hvac_mode = hvac_mode
-                await self.api.set_attribute(self.eid, K_AC_MODE, 8)
+                await self.api.set_attributes(self.eid, attrs)
             else:
                 _LOGGER.warning("Unsupported hvac_mode: %s", hvac_mode)
         self.async_write_ha_state()

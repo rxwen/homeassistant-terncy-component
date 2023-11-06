@@ -203,31 +203,11 @@ class TerncyGateway:
         self.update_listeners(eid, [{"attr": attr, "value": value}])
         return ret
 
-    async def set_attributes(self, eid: str, attrs: list[AttrValue]):
-        """hack"""
-        api = self.api
-        if api._connection is None:
-            _LOGGER.info(f"no connection with {api.dev_id}")
-            return None
-        req_id = _next_req_id()
-        data = {
-            "reqId": req_id,
-            "intent": "execute",
-            "entities": [
-                {
-                    "id": eid,
-                    "attributes": [
-                        {
-                            "attr": av["attr"],
-                            "value": av["value"],
-                            "method": 0,
-                        }
-                        for av in attrs
-                    ],
-                }
-            ],
-        }
-        await api._connection.send(json.dumps(data))
+    async def set_attributes(self, eid: str, attrs: list[AttrValue], method=0):
+        _LOGGER.info(eid)
+        ret = await self.api.set_attributes(eid, attrs, method)
+        self.update_listeners(eid, attrs)
+        return ret
 
     # region Event handlers
 
