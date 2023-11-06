@@ -49,6 +49,7 @@ K_AC_FAN_SPEED = "acFanSpeed"  # 快速：1，中速：2，慢速：4
 K_AC_CURRENT_TEMPERATURE = "acCurrentTemperature"  # 16~30
 K_AC_TARGET_TEMPERATURE = "acTargetTemperature"  # 16~30
 K_AC_RUNNING = "acRunning"  # 0 or 1
+K_AC_TEMP_UNIT = "tempUnit"  # 温度单位为1表示精度为0.1度，否则精度为1度
 
 
 class TerncyClimate(TerncyEntity, ClimateEntity):
@@ -69,9 +70,13 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
     _attr_target_temperature_step: float | None = 1
     # _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_temperature_unit: str = TEMP_CELSIUS  # <2022.11
+    _current_temp_unit: float = 1
 
     def update_state(self, attrs):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
+        if (temp_unit := get_attr_value(attrs, K_AC_TEMP_UNIT)) is not None:
+            if temp_unit == 1:
+                self._current_temp_unit: float = 10
         if (ac_mode := get_attr_value(attrs, K_AC_MODE)) is not None:
             if ac_mode == 1:
                 self._attr_hvac_mode = HVACMode.COOL
@@ -100,7 +105,7 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
         if (
             current_temperature := get_attr_value(attrs, K_AC_CURRENT_TEMPERATURE)
         ) is not None:
-            self._attr_current_temperature = current_temperature
+            self._attr_current_temperature = current_temperature / self._current_temp_unit
 
         if (
             target_temperature := get_attr_value(attrs, K_AC_TARGET_TEMPERATURE)
