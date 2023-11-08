@@ -91,8 +91,7 @@ DEVICE_TRIGGER_ACTIONS_MAP = {
 }
 
 # 给 Event Entity 用的
-EVENT_ENTITY_BUTTON_EVENTS = [
-    ACTION_LONG_PRESS,
+_PRESS_EVENTS = [
     ACTION_SINGLE_PRESS,
     ACTION_DOUBLE_PRESS,
     ACTION_TRIPLE_PRESS,
@@ -103,7 +102,15 @@ EVENT_ENTITY_BUTTON_EVENTS = [
     "octuple_press",
     "nonuple_press",
 ]
-EVENT_ENTITY_DIAL_EVENTS = [*EVENT_ENTITY_BUTTON_EVENTS, ACTION_ROTATION]
+
+EVENT_ENTITY_BUTTON_EVENTS = [
+    ACTION_LONG_PRESS,
+    *_PRESS_EVENTS
+]
+EVENT_ENTITY_DIAL_EVENTS = [
+    *_PRESS_EVENTS,
+    ACTION_ROTATION,
+]
 
 
 @dataclass(slots=True)
@@ -138,3 +145,47 @@ class TerncyDeviceData(TypedDict):
 
 
 HAS_EVENT_PLATFORM = (MAJOR_VERSION, MINOR_VERSION) >= (2023, 8)  # HA>=2023.8
+
+
+# region Default Rooms
+
+DEFAULT_ROOMS = {
+    "zh-Hans": {
+        "area-0000": "默认房间",
+        "area-0001": "客厅",
+        "area-0002": "主卧",
+        "area-0003": "次卧",
+        "area-0004": "餐厅",
+        "area-0005": "厨房",
+        "area-0006": "阳台",
+        "area-0007": "书房",
+        "area-0008": "玄关",
+        "area-0009": "洗手间",
+    },
+    "zh-Hant": {
+        "area-0000": "默認房間",
+        "area-0001": "客廳",
+        "area-0002": "主臥",
+        "area-0003": "次臥",
+        "area-0004": "餐廳",
+        "area-0005": "廚房",
+        "area-0006": "陽台",
+        "area-0007": "書房",
+        "area-0008": "玄關",
+        "area-0009": "洗手間",
+    },
+    "en": {
+        "area-0000": "Default Room",
+        "area-0001": "Living Room",
+        "area-0002": "Master Bedroom",
+        "area-0003": "Guest Bedroom",
+        "area-0004": "Dining Room",
+        "area-0005": "Kitchen",
+        "area-0006": "Balcony",
+        "area-0007": "Study",
+        "area-0008": "Entrance",
+        "area-0009": "Bath Room",
+    },
+}
+
+# endregion

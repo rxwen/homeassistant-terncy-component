@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 from collections.abc import Callable, Coroutine
 from itertools import groupby
@@ -30,7 +29,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.typing import UNDEFINED
 from terncy import Terncy
 from terncy.event import Connected, Disconnected, EventMessage
-from terncy.terncy import _next_req_id
 
 from .device import TerncyDevice
 from .entity import TerncyEntity
@@ -43,6 +41,7 @@ from ..const import (
     CONF_EXPORT_DEVICE_GROUPS,
     CONF_EXPORT_SCENES,
     CONF_IP,
+    DEFAULT_ROOMS,
     DOMAIN,
     EVENT_DATA_CLICK_TIMES,
     EVENT_DATA_SOURCE,
@@ -535,10 +534,15 @@ class TerncyGateway:
         _LOGGER.debug("[%s] Fetching data...", self.unique_id)
 
         # room
+        lang = self.hass.config.language
+        default_rooms = DEFAULT_ROOMS.get(lang, DEFAULT_ROOMS.get("en"))
         try:
             rooms: list[RoomData] = await self._fetch_data("room")
-            self.room_data = {room["id"]: room["name"] for room in rooms}
-            _LOGGER.debug("[%s] ROOM: %s", self.unique_id, self.room_data)
+            self.room_data = {
+                room["id"]: room["name"] or default_rooms.get(room["id"], "")
+                for room in rooms
+            }
+            _LOGGER.debug("[%s] ROOM %s: %s", self.unique_id, lang, self.room_data)
         except Exception as e:
             _LOGGER.warning("fetch room error: %s", e)
 
