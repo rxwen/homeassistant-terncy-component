@@ -1,4 +1,16 @@
-"""HA<2023.7"""
+"""
+这个文件的配置是给 HA 版本 <2023.7 用的
+2023.7 引入了新的实体命名机制, 详见: https://developers.home-assistant.io/docs/core/entity/#entity-naming
+
+本文件基于 profiles.py, 做以下修改以兼容旧版:
+- 所有的 description 都需要指定 name。（具体字符串或者None）
+- translation_key 建议删除，旧版中没有作用。
+
+备注：
+  name=None 表示这个实体是这个设备的主要功能，直接使用设备名字。
+  light、cover、climate 已经在 base description 中声明过 name=None 了。
+"""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ColorMode  # >=2022.5
@@ -21,13 +33,16 @@ from ..const import (
     PROFILE_EXTENDED_COLOR_LIGHT2,
     PROFILE_GAS,
     PROFILE_HA_TEMPERATURE_HUMIDITY,
+    PROFILE_HA_THERMASTAT,
     PROFILE_LOCK,
     PROFILE_OCCUPANCY_SENSOR,
     PROFILE_ONOFF_LIGHT,
     PROFILE_PIR,
     PROFILE_PLUG,
+    PROFILE_PRESENCE_SENSOR,
     PROFILE_SMART_DIAL,
     PROFILE_SWITCH,
+    PROFILE_XY_SINGLE_AIR_COND,
     PROFILE_YAN_BUTTON,
     TerncyEntityDescription,
 )
@@ -155,6 +170,16 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             key="climate",
         ),
     ],
+    PROFILE_HA_THERMASTAT: [
+        TerncyClimateDescription(
+            key="climate",
+        ),
+    ],
+    PROFILE_XY_SINGLE_AIR_COND: [
+        TerncyClimateDescription(
+            key="climate",
+        ),
+    ],
     PROFILE_LOCK: [
         TerncyBinarySensorDescription(
             key="lock",
@@ -193,6 +218,7 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
             key="motion",
             sub_key="motion",
             device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion",
             value_attr="motion",
         ),
         BatteryDescription(
@@ -248,6 +274,13 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.HS,
             supported_color_modes={ColorMode.COLOR_TEMP, ColorMode.HS},
+        ),
+    ],
+    PROFILE_PRESENCE_SENSOR: [
+        TerncyBinarySensorDescription(
+            key="presenceStatus",
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            value_attr="presenceStatus",
         ),
     ],
 }
