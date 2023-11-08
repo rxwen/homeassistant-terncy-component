@@ -128,6 +128,7 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyBinarySensorDescription(
             key="contact",
             name=None,
+            value_attr="contact",
         ),
         TemperatureDescription(),
         BatteryDescription(),
