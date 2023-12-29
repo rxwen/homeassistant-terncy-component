@@ -8,10 +8,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ColorMode,  # >=2022.5
+    ColorMode,
     LightEntity,
     LightEntityDescription,
-    LightEntityFeature,  # >=2022.5
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

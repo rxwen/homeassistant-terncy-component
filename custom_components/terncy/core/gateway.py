@@ -422,7 +422,7 @@ class TerncyGateway:
 
     @callback
     def async_create_task(self, target: Coroutine):
-        return self.config_entry.async_create_task(self.hass, target)  # >=2022.7
+        return self.config_entry.async_create_task(self.hass, target)
 
     # endregion
 

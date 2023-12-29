@@ -17,7 +17,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
-    UnitOfTemperature,  # >=2022.11
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory  # <2023.3

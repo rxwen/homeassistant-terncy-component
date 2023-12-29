@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverEntity,
     CoverEntityDescription,
-    CoverEntityFeature,  # >=2022.5
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
