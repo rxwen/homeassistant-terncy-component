@@ -30,7 +30,9 @@ class TerncyBinarySensorDescription(
     PLATFORM: Platform = Platform.BINARY_SENSOR
     has_entity_name: bool = True
     value_attr: str = ""
-    value_map: dict[int, bool] = field(default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False})
+    value_map: dict[int, bool] = field(
+        default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False}
+    )
 
 
 async def async_setup_entry(
