@@ -17,8 +17,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
-    # UnitOfTemperature,  # >=2022.11
-    TEMP_CELSIUS,  # <2022.11
+    UnitOfTemperature,  # >=2022.11
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory  # <2023.3
@@ -48,8 +47,7 @@ class TemperatureDescription(TerncySensorDescription):
     key: str = "temperature"
     sub_key: str = "temperature"
     device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
-    # native_unit_of_measurement: UnitOfTemperature = UnitOfTemperature.CELSIUS
-    native_unit_of_measurement: str = TEMP_CELSIUS  # <2022.11
+    native_unit_of_measurement: UnitOfTemperature = UnitOfTemperature.CELSIUS
     state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     suggested_display_precision: int = 1
     value_attr: str = "temperature"

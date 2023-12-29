@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
@@ -72,8 +72,7 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_target_temperature_step: float | None = 1
-    # _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
-    _attr_temperature_unit: str = TEMP_CELSIUS  # <2022.11
+    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
 
     def update_state(self, attrs):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
