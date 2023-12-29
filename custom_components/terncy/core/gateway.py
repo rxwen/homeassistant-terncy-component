@@ -622,7 +622,7 @@ class TerncyGateway:
             entity = entities[0]
             self.scenes[scene_id] = entity
         else:
-            entity.entity_description.name = name
+            entity._attr_name = name
 
         entity.set_available(online)
         entity.update_state(attributes)
