@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyBinarySensorDescription(
     TerncyEntityDescription, BinarySensorEntityDescription
 ):

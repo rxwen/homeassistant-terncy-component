@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     PLATFORM: Platform = Platform.SENSOR
     has_entity_name: bool = True
@@ -43,7 +43,7 @@ class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     value_fn: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: x
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TemperatureDescription(TerncySensorDescription):
     key: str = "temperature"
     sub_key: str = "temperature"
@@ -59,7 +59,7 @@ class TemperatureDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_temptemp"
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class HumidityDescription(TerncySensorDescription):
     key: str = "humidity"
     sub_key: str = "humidity"
@@ -71,7 +71,7 @@ class HumidityDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_himidityhumidity"
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class IlluminanceDescription(TerncySensorDescription):
     key: str = "illuminance"
     sub_key: str = "illuminance"
@@ -83,7 +83,7 @@ class IlluminanceDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_illu-illumin"
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class BatteryDescription(TerncySensorDescription):
     key: str = "battery"
     sub_key: str = "battery"

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
     PLATFORM: Platform = Platform.COVER
     has_entity_name: bool = True

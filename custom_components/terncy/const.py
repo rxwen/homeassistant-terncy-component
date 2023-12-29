@@ -113,7 +113,7 @@ EVENT_ENTITY_DIAL_EVENTS = [
 FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyEntityDescription(EntityDescription):
     PLATFORM: Platform = None
 

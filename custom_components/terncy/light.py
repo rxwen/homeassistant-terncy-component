@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
     key: str = "light"
     PLATFORM: Platform = Platform.LIGHT

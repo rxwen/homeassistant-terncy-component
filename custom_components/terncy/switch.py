@@ -29,7 +29,7 @@ KEY_DISABLE_RELAY = "disable_relay"
 KEY_DISABLED_RELAY_STATUS = "disabled_relay_status"
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
     PLATFORM: Platform = Platform.SWITCH
     has_entity_name: bool = True

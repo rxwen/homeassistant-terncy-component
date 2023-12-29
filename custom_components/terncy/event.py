@@ -29,13 +29,13 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
     PLATFORM: Platform = Platform.EVENT
     has_entity_name: bool = True
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyButtonDescription(TerncyEventDescription):
     key: str = "event_button"
     sub_key: str = "button"

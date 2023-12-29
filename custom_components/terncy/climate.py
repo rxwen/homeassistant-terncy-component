@@ -29,7 +29,7 @@ from custom_components.terncy.utils import get_attr_value
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription):
     PLATFORM: Platform = Platform.CLIMATE
     has_entity_name: bool = True
