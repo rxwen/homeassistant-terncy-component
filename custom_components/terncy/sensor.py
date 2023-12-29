@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import EntityCategory  # <2023.3
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TerncyEntityDescription
+from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
 from .core.entity import TerncyEntity, create_entity_setup
 from .utils import get_attr_value
 
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     PLATFORM: Platform = Platform.SENSOR
     has_entity_name: bool = True
@@ -43,7 +43,7 @@ class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     value_fn: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: x
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TemperatureDescription(TerncySensorDescription):
     key: str = "temperature"
     sub_key: str = "temperature"
@@ -59,7 +59,7 @@ class TemperatureDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_temptemp"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class HumidityDescription(TerncySensorDescription):
     key: str = "humidity"
     sub_key: str = "humidity"
@@ -71,7 +71,7 @@ class HumidityDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_himidityhumidity"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class IlluminanceDescription(TerncySensorDescription):
     key: str = "illuminance"
     sub_key: str = "illuminance"
@@ -83,7 +83,7 @@ class IlluminanceDescription(TerncySensorDescription):
     old_unique_id_suffix: str = "_illu-illumin"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class BatteryDescription(TerncySensorDescription):
     key: str = "battery"
     sub_key: str = "battery"

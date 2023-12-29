@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TerncyEntityDescription
+from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
 from .core.entity import TerncyEntity, create_entity_setup
 from .types import AttrValue
 from .utils import get_attr_value
@@ -29,7 +29,7 @@ KEY_DISABLE_RELAY = "disable_relay"
 KEY_DISABLED_RELAY_STATUS = "disabled_relay_status"
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
     PLATFORM: Platform = Platform.SWITCH
     has_entity_name: bool = True

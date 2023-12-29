@@ -109,8 +109,11 @@ EVENT_ENTITY_DIAL_EVENTS = [
     ACTION_ROTATION,
 ]
 
+# https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
+FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
 
-@dataclass(slots=True)
+
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncyEntityDescription(EntityDescription):
     PLATFORM: Platform = None
 

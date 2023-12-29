@@ -15,7 +15,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EVENT_ENTITY_BUTTON_EVENTS, TerncyEntityDescription
+from .const import (
+    DOMAIN,
+    EVENT_ENTITY_BUTTON_EVENTS,
+    FROZEN_ENTITY_DESCRIPTION,
+    TerncyEntityDescription,
+)
 from .core.entity import TerncyEntity, create_entity_setup
 
 if TYPE_CHECKING:
@@ -24,13 +29,13 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
     PLATFORM: Platform = Platform.EVENT
     has_entity_name: bool = True
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncyButtonDescription(TerncyEventDescription):
     key: str = "event_button"
     sub_key: str = "button"

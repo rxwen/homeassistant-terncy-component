@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, TerncyEntityDescription
+from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
 from .core.entity import TerncyEntity, create_entity_setup
 from .utils import get_attr_value
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION)
 class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
     PLATFORM: Platform = Platform.COVER
     has_entity_name: bool = True
