@@ -422,7 +422,7 @@ class TerncyGateway:
 
     @callback
     def async_create_task(self, target: Coroutine):
-        return self.config_entry.async_create_task(self.hass, target)  # >=2022.7
+        return self.config_entry.async_create_task(self.hass, target)
 
     # endregion
 
@@ -622,7 +622,7 @@ class TerncyGateway:
             entity = entities[0]
             self.scenes[scene_id] = entity
         else:
-            entity.entity_description.name = name
+            entity._attr_name = name
 
         entity.set_available(online)
         entity.update_state(attributes)

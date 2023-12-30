@@ -8,10 +8,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ColorMode,  # >=2022.5
+    ColorMode,
     LightEntity,
     LightEntityDescription,
-    LightEntityFeature,  # >=2022.5
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, TerncyEntityDescription
+from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
 from .core.entity import TerncyEntity, create_entity_setup
 from .utils import get_attr_value
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
     key: str = "light"
     PLATFORM: Platform = Platform.LIGHT

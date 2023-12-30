@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TerncyEntityDescription
+from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
 from .core.entity import TerncyEntity, create_entity_setup
 from .types import AttrValue
 from .utils import get_attr_value
@@ -23,14 +23,16 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyBinarySensorDescription(
     TerncyEntityDescription, BinarySensorEntityDescription
 ):
     PLATFORM: Platform = Platform.BINARY_SENSOR
     has_entity_name: bool = True
     value_attr: str = ""
-    value_map: dict[int, bool] = field(default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False})
+    value_map: dict[int, bool] = field(
+        default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False}
+    )
 
 
 async def async_setup_entry(

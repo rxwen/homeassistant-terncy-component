@@ -162,7 +162,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         properties = discovery_info.properties
         _LOGGER.debug(properties)
-        if not properties or not CONF_NAME in properties:
+        if not properties or CONF_NAME not in properties:
             _LOGGER.warning("invalid discovery properties %s", DOMAIN)
             return await self.async_step_confirm()
         name = properties[CONF_NAME]

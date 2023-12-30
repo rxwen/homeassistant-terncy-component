@@ -103,17 +103,17 @@ _PRESS_EVENTS = [
     "nonuple_press",
 ]
 
-EVENT_ENTITY_BUTTON_EVENTS = [
-    ACTION_LONG_PRESS,
-    *_PRESS_EVENTS
-]
+EVENT_ENTITY_BUTTON_EVENTS = [ACTION_LONG_PRESS, *_PRESS_EVENTS]
 EVENT_ENTITY_DIAL_EVENTS = [
     *_PRESS_EVENTS,
     ACTION_ROTATION,
 ]
 
+# https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
+FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
 
-@dataclass(slots=True)
+
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyEntityDescription(EntityDescription):
     PLATFORM: Platform = None
 
