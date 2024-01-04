@@ -2,7 +2,7 @@
 import logging
 
 import voluptuous as vol
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import TriggerActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_TYPE
@@ -68,7 +68,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
+    action: TriggerActionType,
     trigger_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
