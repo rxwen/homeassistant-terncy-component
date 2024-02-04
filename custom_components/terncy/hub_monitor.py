@@ -44,7 +44,7 @@ class TerncyZCListener:
 
     def remove_service(self, zconf, svc_type, name):
         """Get a terncy service removed event."""
-        _LOGGER.debug("remove_service %s %s %s", svc_type, name)
+        _LOGGER.debug("remove_service %s %s", svc_type, name)
         dev_id = name.replace("." + svc_type, "")
         if dev_id in self.manager.hubs:
             del self.manager.hubs[dev_id]

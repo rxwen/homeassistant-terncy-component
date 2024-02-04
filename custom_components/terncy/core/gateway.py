@@ -48,6 +48,7 @@ from ..const import (
     EVENT_ENTITY_BUTTON_EVENTS,
     HA_CLIENT_ID,
     TERNCY_EVENT_SVC_ADD,
+    TERNCY_EVENT_SVC_RECONNECT,
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_HUB_ID_PREFIX,
     TERNCY_MANU_NAME,
@@ -130,7 +131,7 @@ class TerncyGateway:
             asyncio.create_task(tern.start())
 
         def on_terncy_svc_add(event: Event):
-            """Stop push updates when hass stops."""
+            """Terncy service found handler"""
             dev_id = event.data[CONF_DEVID]
             if dev_id != tern.dev_id:
                 return
@@ -143,18 +144,39 @@ class TerncyGateway:
             if not tern.is_connected():
                 tern.ip = ip
                 _LOGGER.debug("Start connecting %s %s", dev_id, tern.ip)
+                tern.retry = True
                 self.async_create_task(setup_terncy_loop())
 
+        async def on_terncy_svc_reconnect(event: Event):
+            """Terncy service retry connection handler"""
+            dev_id = event.data[CONF_DEVID]
+            if dev_id != tern.dev_id:
+                return
+            if not tern.retry:
+                _LOGGER.warning("service %s %s stopped, don't retry", dev_id, tern.ip)
+                return
+
+            _LOGGER.warning("Reconnect terncy service: %s %s to wait", dev_id, event.data)
+            await asyncio.sleep(2)
+            _LOGGER.warning("Reconnect terncy service: %s %s after wait", dev_id, event.data)
+            if not tern.is_connected():
+                _LOGGER.warning("Start connecting %s %s", dev_id, tern.ip)
+                self.async_create_task(setup_terncy_loop())
+            else:
+                _LOGGER.warning("service %s %s is still connected while retry", dev_id, event.data)
+
         def on_terncy_svc_remove(event: Event):
-            """Stop push updates when hass stops."""
+            """Terncy service stop handler"""
             dev_id = event.data[CONF_DEVID]
             if dev_id != tern.dev_id:
                 return
 
             _LOGGER.debug("on_terncy_svc_remove %s", event.data[CONF_DEVID])
             self.async_create_task(tern.stop())
+            tern.retry = False
 
         self.hass.bus.async_listen(TERNCY_EVENT_SVC_ADD, on_terncy_svc_add)
+        self.hass.bus.async_listen(TERNCY_EVENT_SVC_RECONNECT, on_terncy_svc_reconnect)
         self.hass.bus.async_listen(TERNCY_EVENT_SVC_REMOVE, on_terncy_svc_remove)
 
         hub_manager = TerncyHubManager.instance(self.hass)
@@ -253,13 +275,15 @@ class TerncyGateway:
                 )
 
         elif isinstance(event, Connected):
-            # _LOGGER.debug("[%s] Connected.", gateway.unique_id)
+            _LOGGER.warning("[%s] Connected.", api.dev_id)
             self.async_create_task(self.async_refresh_devices())
 
         elif isinstance(event, Disconnected):
-            # _LOGGER.debug("[%s] Disconnected.", gateway.unique_id)
+            _LOGGER.warning("[%s] Disconnected.", api.dev_id)
             for device in self.parsed_devices.values():
                 device.set_available(False)
+            txt_records = {CONF_DEVID: api.dev_id}
+            self.hass.bus.async_fire(TERNCY_EVENT_SVC_RECONNECT, txt_records)
 
         else:
             _LOGGER.warning("[%s] Unknown Event: %s", self.unique_id, event)

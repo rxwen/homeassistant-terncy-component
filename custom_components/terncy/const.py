@@ -16,6 +16,7 @@ TERNCY_MANU_NAME = "Xiaoyan Tech."
 
 TERNCY_EVENT_SVC_ADD = "terncy_svc_add"
 TERNCY_EVENT_SVC_REMOVE = "terncy_svc_remove"
+TERNCY_EVENT_SVC_RECONNECT = "terncy_svc_reconnect"
 TERNCY_EVENT_SVC_UPDATE = "terncy_svc_update"
 
 PROFILE_PIR = 0
