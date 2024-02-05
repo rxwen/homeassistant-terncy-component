@@ -126,6 +126,7 @@ class TerncyGateway:
 
     def start(self):
         tern = self.api
+        tern.retry = True
 
         async def setup_terncy_loop():
             asyncio.create_task(tern.start())
