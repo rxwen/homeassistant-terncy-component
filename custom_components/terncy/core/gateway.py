@@ -226,7 +226,6 @@ class TerncyGateway:
         return ret
 
     async def set_attributes(self, eid: str, attrs: list[AttrValue], method=0):
-        _LOGGER.info(eid)
         ret = await self.api.set_attributes(eid, attrs, method)
         self.update_listeners(eid, attrs)
         return ret
@@ -276,7 +275,7 @@ class TerncyGateway:
                 )
 
         elif isinstance(event, Connected):
-            _LOGGER.warning("[%s] Connected.", api.dev_id)
+            _LOGGER.info("[%s] Connected.", api.dev_id)
             self.async_create_task(self.async_refresh_devices())
 
         elif isinstance(event, Disconnected):
