@@ -503,7 +503,12 @@ class TerncyGateway:
 
         for svc in svc_list:
             eid = svc["id"]
-            name = svc["name"] or eid  # some name is ""
+            name = svc["name"]
+            if not name:  # some name is ""
+                if device_name := device_data.get("name"):
+                    name = f"{device_name}-{eid[-2:]}"  # 'device_name-04'
+                else:
+                    name = eid
             attributes = svc.get("attributes", [])
 
             device = self.parsed_devices.get(eid)
