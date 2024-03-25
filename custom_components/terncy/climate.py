@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
-)
-from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     FAN_HIGH,
     FAN_LOW,
@@ -18,13 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
-from custom_components.terncy.const import (
+from .const import (
     DOMAIN,
     FROZEN_ENTITY_DESCRIPTION,
     TerncyEntityDescription,
 )
-from custom_components.terncy.core.entity import TerncyEntity, create_entity_setup
-from custom_components.terncy.utils import get_attr_value
+from .core.entity import TerncyEntity, create_entity_setup
+from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 

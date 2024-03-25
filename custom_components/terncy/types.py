@@ -36,6 +36,7 @@ class PhysicalDeviceData(TypedDict):
     version: int
     hwVersion: int
 
+    name: str | None  # Hub version >= 3.2.14
     services: list[SvcData] | None
     online: bool
 

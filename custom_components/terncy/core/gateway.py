@@ -226,7 +226,6 @@ class TerncyGateway:
         return ret
 
     async def set_attributes(self, eid: str, attrs: list[AttrValue], method=0):
-        _LOGGER.info(eid)
         ret = await self.api.set_attributes(eid, attrs, method)
         self.update_listeners(eid, attrs)
         return ret
@@ -276,7 +275,7 @@ class TerncyGateway:
                 )
 
         elif isinstance(event, Connected):
-            _LOGGER.warning("[%s] Connected.", api.dev_id)
+            _LOGGER.info("[%s] Connected.", api.dev_id)
             self.async_create_task(self.async_refresh_devices())
 
         elif isinstance(event, Disconnected):
@@ -504,7 +503,12 @@ class TerncyGateway:
 
         for svc in svc_list:
             eid = svc["id"]
-            name = svc["name"] or eid  # some name is ""
+            name = svc["name"]
+            if not name:  # some name is ""
+                if device_name := device_data.get("name"):
+                    name = f"{device_name}-{eid[-2:]}"  # 'device_name-04'
+                else:
+                    name = eid
             attributes = svc.get("attributes", [])
 
             device = self.parsed_devices.get(eid)

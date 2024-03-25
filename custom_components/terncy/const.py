@@ -5,7 +5,7 @@ from typing import TypedDict
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, Platform
 from homeassistant.helpers.entity import EntityDescription
 
-from custom_components.terncy.types import AttrValue
+from .types import AttrValue
 
 DOMAIN = "terncy"
 HA_CLIENT_ID = "homeass_nbhQ43"
