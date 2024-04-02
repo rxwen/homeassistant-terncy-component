@@ -221,14 +221,20 @@ class TerncyGateway:
         #     _LOGGER.debug("[%s] no listener for %s", self.unique_id, eid)
 
     async def set_attribute(self, eid: str, attr: str, value, method=0):
-        ret = await self.api.set_attribute(eid, attr, value, method)
+        try:
+            await self.api.set_attribute(eid, attr, value, method)
+        except Exception as e:
+            _LOGGER.error(e)
+            return
         self.update_listeners(eid, [{"attr": attr, "value": value}])
-        return ret
 
     async def set_attributes(self, eid: str, attrs: list[AttrValue], method=0):
-        ret = await self.api.set_attributes(eid, attrs, method)
+        try:
+            await self.api.set_attributes(eid, attrs, method)
+        except Exception as e:
+            _LOGGER.error(e)
+            return
         self.update_listeners(eid, attrs)
-        return ret
 
     # region Event handlers
 
