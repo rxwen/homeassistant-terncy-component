@@ -1,12 +1,11 @@
 """HA>=2023.7"""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ColorMode
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import EntityCategory
 
-from ..binary_sensor import TerncyBinarySensorDescription
-from ..climate import TerncyClimateDescription
 from ..const import (
     EVENT_ENTITY_BUTTON_EVENTS,
     EVENT_ENTITY_DIAL_EVENTS,
@@ -35,15 +34,19 @@ from ..const import (
     PROFILE_SWITCH,
     PROFILE_XY_SINGLE_AIR_COND,
     PROFILE_YAN_BUTTON,
-    TerncyEntityDescription,
 )
-from ..cover import TerncyCoverDescription
-from ..light import TerncyLightDescription
-from ..sensor import (
+from ..hass.entity_descriptions import (
     BatteryDescription,
     HumidityDescription,
     IlluminanceDescription,
     TemperatureDescription,
+    TerncyBinarySensorDescription,
+    TerncyButtonDescription,
+    TerncyClimateDescription,
+    TerncyCoverDescription,
+    TerncyEntityDescription,
+    TerncyLightDescription,
+    TerncySwitchDescription,
 )
 from ..switch import (
     ATTR_DISABLED_RELAY_STATUS,
@@ -53,7 +56,6 @@ from ..switch import (
     KEY_DISABLED_RELAY_STATUS,
     KEY_DISABLE_RELAY,
     KEY_WALL_SWITCH,
-    TerncySwitchDescription,
 )
 
 PROFILES: dict[int, list[TerncyEntityDescription]] = {
@@ -281,8 +283,6 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
 }
 
 if HAS_EVENT_PLATFORM:
-    from ..event import TerncyButtonDescription
-
     EVENT_ENTITY_EVENTS_MAP = {
         PROFILE_PIR: EVENT_ENTITY_BUTTON_EVENTS,
         PROFILE_ONOFF_LIGHT: EVENT_ENTITY_BUTTON_EVENTS,

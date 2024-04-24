@@ -1,4 +1,5 @@
 """Provides device triggers for Terncy."""
+
 import logging
 
 import voluptuous as vol

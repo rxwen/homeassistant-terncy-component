@@ -1,4 +1,5 @@
 """Hub monitor for the Terncy integration."""
+
 import ipaddress
 import logging
 import time

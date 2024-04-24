@@ -1,48 +1,27 @@
 """Cover platform support for Terncy."""
+
 import logging
-from dataclasses import dataclass
-from typing import Any, TYPE_CHECKING
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverEntity,
-    CoverEntityDescription,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
-from .core.entity import TerncyEntity, create_entity_setup
+from .hass.entity import TerncyEntity
+from .hass.entity_descriptions import TerncyCoverDescription
 from .utils import get_attr_value
-
-if TYPE_CHECKING:
-    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
-    PLATFORM: Platform = Platform.COVER
-    has_entity_name: bool = True
-    name: str | UndefinedType | None = None
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        return TerncyCover(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.COVER, create_entity_setup(async_add_entities, new_entity))
+    TerncyEntity.ADD[f"{entry.entry_id}.cover"] = async_add_entities
 
 
 K_CURTAIN_PERCENT = "curtainPercent"
@@ -96,7 +75,7 @@ class TerncyCover(TerncyEntity, CoverEntity):
         await self.api.set_attribute(self.eid, K_CURTAIN_PERCENT, percent)
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs) -> None:
         """Stop the cover."""
         _LOGGER.debug("%s async_stop_cover: %s", self.eid, kwargs)
         await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)
@@ -133,12 +112,12 @@ class TerncyTiltCover(TerncyCover):
             self._tilt_angle = tilt_angle
         super().update_state(attrs)
 
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self, **kwargs) -> None:
         """Open the cover tilt."""
         _LOGGER.debug("%s async_open_cover_tilt: %s", self.eid, kwargs)
         await self.api.set_attribute(self.eid, K_TILT_ANGLE, 0)
 
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self, **kwargs) -> None:
         """Close the cover tilt."""
         _LOGGER.debug("%s async_close_cover_tilt: %s", self.eid, kwargs)
         if self._tilt_angle is not None and self._tilt_angle < 0:
@@ -146,7 +125,7 @@ class TerncyTiltCover(TerncyCover):
         else:
             await self.api.set_attribute(self.eid, K_TILT_ANGLE, 90)
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs) -> None:
         """Move the cover tilt to a specific position."""
         _LOGGER.debug("%s async_set_cover_tilt_position: %s", self.eid, kwargs)
         tilt_position = kwargs[ATTR_TILT_POSITION]
@@ -156,7 +135,10 @@ class TerncyTiltCover(TerncyCover):
             tilt_angle = 90 - round(tilt_position * 0.9)
         await self.api.set_attribute(self.eid, K_TILT_ANGLE, tilt_angle)
 
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self, **kwargs) -> None:
         """Stop the cover."""
         _LOGGER.debug("%s async_stop_cover_tilt: %s", self.eid, kwargs)
         await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)
+
+
+TerncyEntity.NEW["cover"] = TerncyCover

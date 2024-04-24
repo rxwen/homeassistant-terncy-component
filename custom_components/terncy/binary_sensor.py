@@ -1,52 +1,23 @@
 """Binary sensor platform support for Terncy."""
-import logging
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+import logging
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
-from .core.entity import TerncyEntity, create_entity_setup
+from .hass.entity import TerncyEntity
+from .hass.entity_descriptions import TerncyBinarySensorDescription
 from .types import AttrValue
 from .utils import get_attr_value
-
-if TYPE_CHECKING:
-    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyBinarySensorDescription(
-    TerncyEntityDescription, BinarySensorEntityDescription
-):
-    PLATFORM: Platform = Platform.BINARY_SENSOR
-    has_entity_name: bool = True
-    value_attr: str = ""
-    value_map: dict[int, bool] = field(
-        default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False}
-    )
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        return TerncyBinarySensor(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(
-        Platform.BINARY_SENSOR, create_entity_setup(async_add_entities, new_entity)
-    )
+    TerncyEntity.ADD[f"{entry.entry_id}.binary_sensor"] = async_add_entities
 
 
 class TerncyBinarySensor(TerncyEntity, BinarySensorEntity):
@@ -63,3 +34,6 @@ class TerncyBinarySensor(TerncyEntity, BinarySensorEntity):
             self._attr_is_on = self.entity_description.value_map.get(value)
             if self.hass:
                 self.async_write_ha_state()
+
+
+TerncyEntity.NEW["binary_sensor"] = TerncyBinarySensor

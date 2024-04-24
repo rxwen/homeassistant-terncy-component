@@ -1,8 +1,7 @@
 """Light platform support for Terncy."""
+
 import logging
 import math
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,46 +9,22 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
-    LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
-from .core.entity import TerncyEntity, create_entity_setup
+from .hass.entity import TerncyEntity
+from .hass.entity_descriptions import TerncyLightDescription
 from .utils import get_attr_value
-
-if TYPE_CHECKING:
-    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
-    key: str = "light"
-    PLATFORM: Platform = Platform.LIGHT
-    has_entity_name: bool = True
-    name: str | UndefinedType | None = None
-    color_mode: ColorMode | None = None
-    supported_color_modes: set[ColorMode] | None = None
-    supported_features: LightEntityFeature = 0
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        return TerncyLight(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.LIGHT, create_entity_setup(async_add_entities, new_entity))
+    TerncyEntity.ADD[f"{entry.entry_id}.light"] = async_add_entities
 
 
 class TerncyLight(TerncyEntity, LightEntity):
@@ -133,3 +108,6 @@ class TerncyLight(TerncyEntity, LightEntity):
         self._attr_is_on = False
         await self.api.set_attribute(self.eid, "on", 0)
         self.async_write_ha_state()
+
+
+TerncyEntity.NEW["light"] = TerncyLight

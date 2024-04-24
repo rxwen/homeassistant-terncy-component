@@ -1,4 +1,5 @@
 """Config flow for Terncy integration."""
+
 import logging
 import uuid
 from typing import Any

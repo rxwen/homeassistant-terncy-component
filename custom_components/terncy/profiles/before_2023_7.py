@@ -17,8 +17,6 @@ from homeassistant.components.light import ColorMode
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.helpers.entity import EntityCategory  # <2023.3
 
-from ..binary_sensor import TerncyBinarySensorDescription
-from ..climate import TerncyClimateDescription
 from ..const import (
     PROFILE_AC_UNIT_MACHINE,
     PROFILE_COLOR_DIMMABLE_LIGHT,
@@ -44,15 +42,18 @@ from ..const import (
     PROFILE_SWITCH,
     PROFILE_XY_SINGLE_AIR_COND,
     PROFILE_YAN_BUTTON,
-    TerncyEntityDescription,
 )
-from ..cover import TerncyCoverDescription
-from ..light import TerncyLightDescription
-from ..sensor import (
+from ..hass.entity_descriptions import (
     BatteryDescription,
     HumidityDescription,
     IlluminanceDescription,
     TemperatureDescription,
+    TerncyBinarySensorDescription,
+    TerncyClimateDescription,
+    TerncyCoverDescription,
+    TerncyEntityDescription,
+    TerncyLightDescription,
+    TerncySwitchDescription,
 )
 from ..switch import (
     ATTR_DISABLED_RELAY_STATUS,
@@ -62,7 +63,6 @@ from ..switch import (
     KEY_DISABLED_RELAY_STATUS,
     KEY_DISABLE_RELAY,
     KEY_WALL_SWITCH,
-    TerncySwitchDescription,
 )
 
 PROFILES: dict[int, list[TerncyEntityDescription]] = {
