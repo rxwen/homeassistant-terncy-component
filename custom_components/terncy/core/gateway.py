@@ -517,16 +517,16 @@ class TerncyGateway:
                     if svc_room := svc.get("room"):
                         if svc_room_name := self.room_data.get(svc_room):
                             suggested_area = svc_room_name
-                    identifiers = {(DOMAIN, eid)}
-                    for description in PROFILES.get(profile):
-                        if (required_attrs := description.required_attrs) is not None:
-                            if not all(attr in attributes for attr in required_attrs):
-                                continue
-                        entity = create_entity(self, eid, description)
-                        entity._attr_device_info = DeviceInfo(identifiers=identifiers)
-                        ha_add_entity(self.hass, self.config_entry, entity)
-                        device.entities.append(entity)
-                    if len(device.entities) > 0:
+                    descriptions = [
+                        description
+                        for description in PROFILES.get(profile)
+                        if (
+                            not description.required_attrs
+                            or set(description.required_attrs).issubset(attributes)
+                        )
+                    ]
+                    if len(descriptions) > 0:
+                        identifiers = {(DOMAIN, eid)}
                         device_registry.async_get_or_create(
                             config_entry_id=self.config_entry.entry_id,
                             connections={(CONNECTION_ZIGBEE, eid)},
@@ -540,6 +540,11 @@ class TerncyGateway:
                             via_device=(DOMAIN, self.unique_id),
                         )
                         self.add_device(eid, device)
+                        for description in descriptions:
+                            entity = create_entity(self, eid, description)
+                            entity._attr_device_info = DeviceInfo(identifiers=identifiers)
+                            ha_add_entity(self.hass, self.config_entry, entity)
+                            device.entities.append(entity)
                 else:
                     _LOGGER.debug(
                         "[%s] Unsupported profile:%d %s", eid, profile, attributes
