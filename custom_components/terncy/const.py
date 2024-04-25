@@ -1,11 +1,6 @@
 """Constants for the Terncy integration."""
-from dataclasses import dataclass
-from typing import TypedDict
 
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, Platform
-from homeassistant.helpers.entity import EntityDescription
-
-from .types import AttrValue
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 
 DOMAIN = "terncy"
 HA_CLIENT_ID = "homeass_nbhQ43"
@@ -109,40 +104,6 @@ EVENT_ENTITY_DIAL_EVENTS = [
     *_PRESS_EVENTS,
     ACTION_ROTATION,
 ]
-
-# https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
-FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
-
-
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyEntityDescription(EntityDescription):
-    PLATFORM: Platform = None
-
-    sub_key: str | None = None
-    """用作 unique_id 的后缀。"""
-
-    unique_id_prefix: str | None = None
-    """用作 unique_id 的前缀。（目前只给scene用，考虑有没有更好的方式）"""
-
-    old_unique_id_suffix: str | None = None  # use for migrate
-
-    translation_key: str | None = None  # <2023.1 需要这一行，避免报错
-
-    required_attrs: list[str] | None = None
-    """需要的属性，如果没有这些属性，就不创建实体"""
-
-
-class TerncyDeviceData(TypedDict):
-    name: str
-    model: str
-    did: str
-    sw_version: str | None
-    hw_version: str | None
-    descriptions: list[TerncyEntityDescription]
-    triggers: list[dict[str, str]]
-
-    online: bool
-    attributes: list[AttrValue]
 
 
 HAS_EVENT_PLATFORM = (MAJOR_VERSION, MINOR_VERSION) >= (2023, 8)  # HA>=2023.8

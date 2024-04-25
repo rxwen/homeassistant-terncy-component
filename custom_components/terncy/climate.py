@@ -1,9 +1,9 @@
+"""Climate platform support for Terncy."""
+
 import logging
-from dataclasses import dataclass
 
 from homeassistant.components.climate import (
     ClimateEntity,
-    ClimateEntityDescription,
     ClimateEntityFeature,
     FAN_HIGH,
     FAN_LOW,
@@ -11,39 +11,19 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
-from .const import (
-    DOMAIN,
-    FROZEN_ENTITY_DESCRIPTION,
-    TerncyEntityDescription,
-)
-from .core.entity import TerncyEntity, create_entity_setup
+from .hass.entity import TerncyEntity
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription):
-    PLATFORM: Platform = Platform.CLIMATE
-    has_entity_name: bool = True
-    name: str | UndefinedType | None = None
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        return TerncyClimate(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.CLIMATE, create_entity_setup(async_add_entities, new_entity))
+    TerncyEntity.ADD[f"{entry.entry_id}.climate"] = async_add_entities
 
 
 K_AC_MODE = "acMode"  # 制冷：1，除湿：2，通风：4，制热：8
@@ -169,3 +149,6 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.api.set_attribute(self.eid, K_AC_RUNNING, 1)
+
+
+TerncyEntity.NEW["climate"] = TerncyClimate

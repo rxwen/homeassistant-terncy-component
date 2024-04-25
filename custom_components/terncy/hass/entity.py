@@ -3,14 +3,15 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..const import DOMAIN, TerncyEntityDescription
+from .entity_descriptions import TerncyEntityDescription
+from ..const import DOMAIN
 from ..types import AttrValue
 
 if TYPE_CHECKING:
-    from .gateway import TerncyGateway
+    from ..core.gateway import TerncyGateway
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class TerncyEntity(Entity):
     """Base class for Terncy entities."""
+
+    ADD: dict[str, AddEntitiesCallback] = {}  # key: config_entry_id.domain
+    NEW: dict[
+        str, Callable[["TerncyGateway", str, TerncyEntityDescription], "TerncyEntity"]
+    ] = {}  # key: domain.key or domain
 
     entity_description: TerncyEntityDescription
     _attr_should_poll: bool = False
@@ -75,46 +81,3 @@ class TerncyEntity(Entity):
                 old_entity_id,
                 new_unique_id=self._attr_unique_id,
             )
-
-
-def create_entity_setup(
-    async_add_entities: AddEntitiesCallback,
-    new_entity: Callable[["TerncyGateway", str, TerncyEntityDescription], TerncyEntity],
-):
-    def setup_entity(
-        gateway: "TerncyGateway",
-        device_identifiers: set[tuple[str, str]],
-        eid: str,
-        descriptions: list[TerncyEntityDescription],
-        attributes: list[AttrValue],
-    ) -> list[TerncyEntity]:
-        entity_registry = er.async_get(gateway.hass)
-        entities = []
-        for description in descriptions:
-            if (required_attrs := description.required_attrs) is not None:
-                if not all(attr in attributes for attr in required_attrs):
-                    continue
-            entity = new_entity(gateway, eid, description)
-            if entity_id := entity_registry.async_get_entity_id(
-                description.PLATFORM, DOMAIN, entity.unique_id
-            ):
-                if entity_entry := entity_registry.async_get(entity_id):
-                    if entity_entry.config_entry_id != gateway.config_entry.entry_id:
-                        _LOGGER.debug(
-                            "[%s] entity %s already exists, skip",
-                            gateway.unique_id,
-                            entity.unique_id,
-                        )
-                        continue
-                    else:
-                        _LOGGER.debug(
-                            "[%s] created entity %s",
-                            gateway.unique_id,
-                            entity.unique_id,
-                        )
-            entity._attr_device_info = DeviceInfo(identifiers=device_identifiers)
-            entities.append(entity)
-        async_add_entities(entities)
-        return entities
-
-    return setup_entity

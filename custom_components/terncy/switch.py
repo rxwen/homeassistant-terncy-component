@@ -1,21 +1,15 @@
 """Switch platform support for Terncy."""
-import logging
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+import logging
+
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, FROZEN_ENTITY_DESCRIPTION, TerncyEntityDescription
-from .core.entity import TerncyEntity, create_entity_setup
+from .hass.entity import TerncyEntity
+from .hass.entity_descriptions import TerncySwitchDescription
 from .types import AttrValue
 from .utils import get_attr_value
-
-if TYPE_CHECKING:
-    from .core.gateway import TerncyGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,33 +23,10 @@ KEY_DISABLE_RELAY = "disable_relay"
 KEY_DISABLED_RELAY_STATUS = "disabled_relay_status"
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
-    PLATFORM: Platform = Platform.SWITCH
-    has_entity_name: bool = True
-    value_attr: str = "on"
-    invert_state: bool = False
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        if description.key == KEY_WALL_SWITCH:
-            return TerncyWallSwitch(gateway, eid, description)
-
-        if description.key == KEY_DISABLE_RELAY:
-            return DisableRelaySwitch(gateway, eid, description)
-
-        if description.key == KEY_DISABLED_RELAY_STATUS:
-            return DisabledRelayStatusSwitch(gateway, eid, description)
-
-        return TerncyCommonSwitch(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.SWITCH, create_entity_setup(async_add_entities, new_entity))
+    TerncyEntity.ADD[f"{entry.entry_id}.switch"] = async_add_entities
 
 
 class TerncyCommonSwitch(TerncyEntity, SwitchEntity):
@@ -179,3 +150,9 @@ class DisabledRelayStatusSwitch(TerncyCommonSwitch):
             return "mdi:electric-switch-closed"
         else:
             return "mdi:electric-switch"
+
+
+TerncyEntity.NEW["switch"] = TerncyCommonSwitch
+TerncyEntity.NEW[f"switch.key.{KEY_WALL_SWITCH}"] = TerncyWallSwitch
+TerncyEntity.NEW[f"switch.key.{KEY_DISABLE_RELAY}"] = DisableRelaySwitch
+TerncyEntity.NEW[f"switch.key.{KEY_DISABLED_RELAY_STATUS}"] = DisabledRelayStatusSwitch  # fmt: skip

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from collections.abc import Callable, Coroutine
-from itertools import groupby
 from typing import ForwardRef
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,18 +11,13 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
+    DeviceInfo,
     format_mac,
 )
 from homeassistant.helpers.typing import UNDEFINED
@@ -31,7 +25,6 @@ from terncy import Terncy
 from terncy.event import Connected, Disconnected, EventMessage
 
 from .device import TerncyDevice
-from .entity import TerncyEntity
 from ..const import (
     ACTION_LONG_PRESS,
     ACTION_PRESSED,
@@ -52,11 +45,12 @@ from ..const import (
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_HUB_ID_PREFIX,
     TERNCY_MANU_NAME,
-    TerncyEntityDescription,
 )
+from ..hass.add_entities import create_entity, ha_add_entity
+from ..hass.entity import TerncyEntity
+from ..hass.entity_descriptions import TerncyEntityDescription, TerncySwitchDescription
 from ..hub_monitor import TerncyHubManager
 from ..profiles import PROFILES
-from ..switch import TerncySwitchDescription
 from ..types import (
     AttrValue,
     DeviceGroupData,
@@ -94,7 +88,6 @@ class TerncyGateway:
         self.config_entry = config_entry
 
         self.parsed_devices: dict[str, TerncyDevice] = {}  # key: eid
-        self.setups: dict[Platform, SetupHandler] = {}
         self._listeners: dict[str, set[Callable[[list[AttrValue]], None]]] = {}
         self.room_data: dict[str, str] = {}  # room_id: room_name
         self.scenes: dict[str, TerncyEntity] = {}  # 场景实体们
@@ -115,6 +108,7 @@ class TerncyGateway:
             CONF_EXPORT_DEVICE_GROUPS, True
         )
         self.export_scenes = config_entry.options.get(CONF_EXPORT_SCENES, False)
+
         # endregion
 
         async def on_hass_stop(event: Event):
@@ -157,14 +151,20 @@ class TerncyGateway:
                 _LOGGER.warning("service %s %s stopped, don't retry", dev_id, tern.ip)
                 return
 
-            _LOGGER.warning("Reconnect terncy service: %s %s to wait", dev_id, event.data)
+            _LOGGER.warning(
+                "Reconnect terncy service: %s %s to wait", dev_id, event.data
+            )
             await asyncio.sleep(2)
-            _LOGGER.warning("Reconnect terncy service: %s %s after wait", dev_id, event.data)
+            _LOGGER.warning(
+                "Reconnect terncy service: %s %s after wait", dev_id, event.data
+            )
             if not tern.is_connected():
                 _LOGGER.warning("Start connecting %s %s", dev_id, tern.ip)
                 self.async_create_task(setup_terncy_loop())
             else:
-                _LOGGER.warning("service %s %s is still connected while retry", dev_id, event.data)
+                _LOGGER.warning(
+                    "service %s %s is still connected while retry", dev_id, event.data
+                )
 
         def on_terncy_svc_remove(event: Event):
             """Terncy service stop handler"""
@@ -192,7 +192,7 @@ class TerncyGateway:
 
     @property
     def unique_id(self):
-        return self.api.dev_id
+        return self.api.dev_id  # box-12-34-56-78-90-ab
 
     @property
     def is_connected(self):
@@ -221,14 +221,12 @@ class TerncyGateway:
         #     _LOGGER.debug("[%s] no listener for %s", self.unique_id, eid)
 
     async def set_attribute(self, eid: str, attr: str, value, method=0):
-        ret = await self.api.set_attribute(eid, attr, value, method)
+        await self.api.set_attribute(eid, attr, value, method)
         self.update_listeners(eid, [{"attr": attr, "value": value}])
-        return ret
 
     async def set_attributes(self, eid: str, attrs: list[AttrValue], method=0):
-        ret = await self.api.set_attributes(eid, attrs, method)
+        await self.api.set_attributes(eid, attrs, method)
         self.update_listeners(eid, attrs)
-        return ret
 
     # region Event handlers
 
@@ -452,9 +450,6 @@ class TerncyGateway:
 
     # region Setup
 
-    def add_setup(self, platform: Platform, handler: SetupHandler):
-        self.setups[platform] = handler
-
     def add_device(self, eid: str, device: TerncyDevice):
         self.parsed_devices[eid] = device
 
@@ -522,14 +517,16 @@ class TerncyGateway:
                     if svc_room := svc.get("room"):
                         if svc_room_name := self.room_data.get(svc_room):
                             suggested_area = svc_room_name
-                    identifiers = {(DOMAIN, eid)}
-                    all_descriptions = PROFILES.get(profile)
-                    for plat, descs in groupby(all_descriptions, lambda x: x.PLATFORM):
-                        entities = self.setups[plat](
-                            self, identifiers, eid, descs, attributes
+                    descriptions = [
+                        description
+                        for description in PROFILES.get(profile)
+                        if (
+                            not description.required_attrs
+                            or set(description.required_attrs).issubset(attributes)
                         )
-                        device.entities.extend(entities)
-                    if len(device.entities) > 0:
+                    ]
+                    if len(descriptions) > 0:
+                        identifiers = {(DOMAIN, eid)}
                         device_registry.async_get_or_create(
                             config_entry_id=self.config_entry.entry_id,
                             connections={(CONNECTION_ZIGBEE, eid)},
@@ -543,6 +540,11 @@ class TerncyGateway:
                             via_device=(DOMAIN, self.unique_id),
                         )
                         self.add_device(eid, device)
+                        for description in descriptions:
+                            entity = create_entity(self, eid, description)
+                            entity._attr_device_info = DeviceInfo(identifiers=identifiers)
+                            ha_add_entity(self.hass, self.config_entry, entity)
+                            device.entities.append(entity)
                 else:
                     _LOGGER.debug(
                         "[%s] Unsupported profile:%d %s", eid, profile, attributes
@@ -627,33 +629,23 @@ class TerncyGateway:
         name = scene_data.get("name") or scene_id  # some name is ""
         online = scene_data.get("online", True)
 
-        attributes: list[AttrValue] = []
-        if "on" in scene_data:
-            attributes.append({"attr": "on", "value": scene_data["on"]})
-
         entity = self.scenes.get(scene_id)
         if not entity:
-            descriptions = [
-                TerncySwitchDescription(
-                    key="scene",
-                    name=name,
-                    icon="mdi:palette",
-                    unique_id_prefix=self.unique_id,  # scene_id不是uuid形式的，加个网关id作前缀
-                )
-            ]
-            entities = self.setups[Platform.SWITCH](
-                self,
-                {(DOMAIN, f"{self.unique_id}_scenes")},
-                scene_id,
-                descriptions,
-                attributes,
+            description = TerncySwitchDescription(
+                key="scene",
+                name=name,
+                icon="mdi:palette",
+                unique_id_prefix=self.unique_id,  # scene_id不是uuid形式的，加个网关id作前缀
             )
-            entity = entities[0]
+            identifiers = {(DOMAIN, f"{self.unique_id}_scenes")}
+            entity = create_entity(self, scene_id, description)
+            entity._attr_device_info = DeviceInfo(identifiers=identifiers)
+            ha_add_entity(self.hass, self.config_entry, entity)
             self.scenes[scene_id] = entity
         else:
             entity._attr_name = name
 
         entity.set_available(online)
-        entity.update_state(attributes)
+        entity.update_state([{"attr": "on", "value": scene_data["on"]}])
 
     # endregion

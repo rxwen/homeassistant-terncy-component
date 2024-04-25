@@ -1,4 +1,5 @@
 """Hub monitor for the Terncy integration."""
+
 import ipaddress
 import logging
 import time
@@ -49,7 +50,7 @@ class TerncyZCListener:
         if dev_id in self.manager.hubs:
             del self.manager.hubs[dev_id]
         txt_records = {CONF_DEVID: dev_id}
-        self.manager.hass.bus.async_fire(TERNCY_EVENT_SVC_REMOVE, txt_records)
+        self.manager.hass.bus.fire(TERNCY_EVENT_SVC_REMOVE, txt_records)
 
     def update_service(self, zconf, svc_type, name):
         """Get a terncy service updated event."""
@@ -61,7 +62,7 @@ class TerncyZCListener:
         txt_records = _parse_svc(dev_id, info)
 
         self.manager.hubs[dev_id] = txt_records
-        self.manager.hass.bus.async_fire(TERNCY_EVENT_SVC_UPDATE, txt_records)
+        self.manager.hass.bus.fire(TERNCY_EVENT_SVC_UPDATE, txt_records)
 
     def add_service(self, zconf, svc_type, name):
         """Get a new terncy service discovered event."""
@@ -84,7 +85,7 @@ class TerncyZCListener:
             info = zconf.get_service_info(svc_type, name)
 
         self.manager.hubs[dev_id] = txt_records
-        self.manager.hass.bus.async_fire(TERNCY_EVENT_SVC_ADD, txt_records)
+        self.manager.hass.bus.fire(TERNCY_EVENT_SVC_ADD, txt_records)
 
 
 class TerncyHubManager:

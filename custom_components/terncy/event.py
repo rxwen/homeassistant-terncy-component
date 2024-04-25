@@ -1,61 +1,22 @@
 """Event platform support for Terncy. HA>=2023.8"""
-import logging
-from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
 
-from homeassistant.components.event import (
-    EventDeviceClass,
-    EventEntity,
-    EventEntityDescription,
-)
+import logging
+from typing import Any
+
+from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    Platform,
-)
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    EVENT_ENTITY_BUTTON_EVENTS,
-    FROZEN_ENTITY_DESCRIPTION,
-    TerncyEntityDescription,
-)
-from .core.entity import TerncyEntity, create_entity_setup
-
-if TYPE_CHECKING:
-    from .core.gateway import TerncyGateway
+from .hass.entity import TerncyEntity
+from .hass.entity_descriptions import TerncyEventDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
-    PLATFORM: Platform = Platform.EVENT
-    has_entity_name: bool = True
-
-
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyButtonDescription(TerncyEventDescription):
-    key: str = "event_button"
-    sub_key: str = "button"
-    device_class: EventDeviceClass = EventDeviceClass.BUTTON
-    translation_key: str = "button"
-    event_types: list[str] = field(
-        default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
-    )
-
-
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
-    def new_entity(gateway, eid: str, description: TerncyEntityDescription):
-        return TerncyEvent(gateway, eid, description)
-
-    gw: "TerncyGateway" = hass.data[DOMAIN][config_entry.entry_id]
-    gw.add_setup(Platform.EVENT, create_entity_setup(async_add_entities, new_entity))
+    TerncyEntity.ADD[f"{entry.entry_id}.event"] = async_add_entities
 
 
 class TerncyEvent(TerncyEntity, EventEntity):
@@ -73,3 +34,6 @@ class TerncyEvent(TerncyEntity, EventEntity):
     ) -> None:
         self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()
+
+
+TerncyEntity.NEW["event"] = TerncyEvent
