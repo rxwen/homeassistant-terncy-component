@@ -517,12 +517,13 @@ class TerncyGateway:
                     if svc_room := svc.get("room"):
                         if svc_room_name := self.room_data.get(svc_room):
                             suggested_area = svc_room_name
+                    attrs = [a['attr'] for a in attributes]
                     descriptions = [
                         description
                         for description in PROFILES.get(profile)
                         if (
                             not description.required_attrs
-                            or set(description.required_attrs).issubset(attributes)
+                            or set(description.required_attrs).issubset(attrs)
                         )
                     ]
                     if len(descriptions) > 0:
