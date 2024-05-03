@@ -36,6 +36,8 @@ K_AC_TEMP_UNIT = "tempUnit"  # 温度单位为1表示精度为0.1度，否则精
 
 class TerncyClimate(TerncyEntity, ClimateEntity):
     _attr_fan_modes: list[str] | None = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_hvac_mode = HVACMode.OFF
+    _attr_fan_mode = FAN_LOW
     _attr_hvac_modes: list[HVACMode] = [
         HVACMode.OFF,
         HVACMode.COOL,
