@@ -53,6 +53,9 @@ class TerncyEntityDescription(EntityDescription):
     required_attrs: list[str] | None = None
     """需要的属性，如果没有这些属性，就不创建实体"""
 
+    disabled_attrs: list[str] | None = None
+    """不应存在的属性，如果有任一属性，就不创建实体"""
+
 
 # region Binary Sensor
 
@@ -88,6 +91,14 @@ class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription
 
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
+    PLATFORM: Platform = Platform.COVER
+    has_entity_name: bool = True
+    name: str | UndefinedType | None = None
+
+
+@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+class TerncyTiltCoverDescription(TerncyEntityDescription, CoverEntityDescription):
+    key: str = "tilt"
     PLATFORM: Platform = Platform.COVER
     has_entity_name: bool = True
     name: str | UndefinedType | None = None

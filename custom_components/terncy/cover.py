@@ -142,3 +142,4 @@ class TerncyTiltCover(TerncyCover):
 
 
 TerncyEntity.NEW["cover"] = TerncyCover
+TerncyEntity.NEW[f"cover.key.tilt"] = TerncyTiltCover

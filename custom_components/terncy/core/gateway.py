@@ -526,6 +526,15 @@ class TerncyGateway:
                             or set(description.required_attrs).issubset(attrs)
                         )
                     ]
+                    descriptions = [
+                        description
+                        for description in descriptions
+                        if (
+                            not description.disabled_attrs
+                            or not set(description.disabled_attrs).issubset(attrs)
+                        )
+                    ]
+
                     if len(descriptions) > 0:
                         identifiers = {(DOMAIN, eid)}
                         device_registry.async_get_or_create(

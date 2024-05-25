@@ -57,6 +57,9 @@ from ..switch import (
     KEY_DISABLE_RELAY,
     KEY_WALL_SWITCH,
 )
+from ..cover import (
+    ATTR_TILT_POSITION,
+)
 
 PROFILES: dict[int, list[TerncyEntityDescription]] = {
     PROFILE_PIR: [
@@ -147,6 +150,12 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyCoverDescription(
             key="cover",
             device_class=CoverDeviceClass.CURTAIN,
+            disabled_attrs = [ATTR_TILT_POSITION],
+        ),
+        TerncyCoverDescription(
+            key="cover",
+            device_class=CoverDeviceClass.CURTAIN,
+            required_attrs = [ATTR_TILT_POSITION],
         ),
     ],
     PROFILE_YAN_BUTTON: [
