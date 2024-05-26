@@ -11,15 +11,22 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    MAJOR_VERSION,
+    MINOR_VERSION,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
-    DeviceInfo,
     format_mac,
 )
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 9):
+    from homeassistant.helpers.device_registry import DeviceInfo
+else:
+    from homeassistant.helpers.entity import DeviceInfo
+
 from homeassistant.helpers.typing import UNDEFINED
 from terncy import Terncy
 from terncy.event import Connected, Disconnected, EventMessage

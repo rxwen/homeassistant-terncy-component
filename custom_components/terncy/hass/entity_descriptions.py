@@ -6,7 +6,6 @@ from typing import Any, Callable
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.cover import CoverEntityDescription
-from homeassistant.components.event import EventDeviceClass, EventEntityDescription
 from homeassistant.components.light import (
     ColorMode,
     LightEntityDescription,
@@ -19,18 +18,23 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
-    EntityCategory,
     LIGHT_LUX,
     MAJOR_VERSION,
+    MINOR_VERSION,
     PERCENTAGE,
     Platform,
     UnitOfTemperature,
 )
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 3):
+    from homeassistant.const import EntityCategory
+else:
+    from homeassistant.helpers.entity import EntityCategory
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType, UndefinedType
 
-from ..const import EVENT_ENTITY_BUTTON_EVENTS
-
+from ..const import EVENT_ENTITY_BUTTON_EVENTS, HAS_EVENT_PLATFORM
 
 # https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
 FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
@@ -97,20 +101,22 @@ class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
 # region Event
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
-    PLATFORM: Platform = Platform.EVENT
+if HAS_EVENT_PLATFORM:
+    from homeassistant.components.event import EventDeviceClass, EventEntityDescription
 
+    @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+    class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
+        PLATFORM: Platform = Platform.EVENT
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyButtonDescription(TerncyEventDescription):
-    key: str = "event_button"
-    sub_key: str = "button"
-    device_class: EventDeviceClass = EventDeviceClass.BUTTON
-    translation_key: str = "button"
-    event_types: list[str] = field(
-        default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
-    )
+    @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+    class TerncyButtonDescription(TerncyEventDescription):
+        key: str = "event_button"
+        sub_key: str = "button"
+        device_class: EventDeviceClass = EventDeviceClass.BUTTON
+        translation_key: str = "button"
+        event_types: list[str] = field(
+            default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
+        )
 
 
 # endregion

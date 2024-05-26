@@ -15,7 +15,12 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ColorMode
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.helpers.entity import EntityCategory  # <2023.3
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 3):
+    from homeassistant.const import EntityCategory
+else:
+    from homeassistant.helpers.entity import EntityCategory
 
 from ..const import (
     PROFILE_AC_UNIT_MACHINE,
