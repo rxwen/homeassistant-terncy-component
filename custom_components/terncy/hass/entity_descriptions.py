@@ -40,6 +40,8 @@ FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
 class TerncyEntityDescription(EntityDescription):
     PLATFORM: Platform = None
 
+    has_entity_name: bool = True
+
     sub_key: str | None = None
     """用作 unique_id 的后缀。"""
 
@@ -62,7 +64,6 @@ class TerncyBinarySensorDescription(
     TerncyEntityDescription, BinarySensorEntityDescription
 ):
     PLATFORM: Platform = Platform.BINARY_SENSOR
-    has_entity_name: bool = True
     value_attr: str = ""
     value_map: dict[int, bool] = field(
         default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False}
@@ -77,7 +78,6 @@ class TerncyBinarySensorDescription(
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription):
     PLATFORM: Platform = Platform.CLIMATE
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
 
 
@@ -89,7 +89,6 @@ class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
     PLATFORM: Platform = Platform.COVER
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
 
 
@@ -101,7 +100,6 @@ class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
     PLATFORM: Platform = Platform.EVENT
-    has_entity_name: bool = True
 
 
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
@@ -124,7 +122,6 @@ class TerncyButtonDescription(TerncyEventDescription):
 class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
     key: str = "light"
     PLATFORM: Platform = Platform.LIGHT
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
     color_mode: ColorMode | None = None
     supported_color_modes: set[ColorMode] | None = None
@@ -139,7 +136,6 @@ class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     PLATFORM: Platform = Platform.SENSOR
-    has_entity_name: bool = True
     value_attr: str = ""
     value_fn: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: x
 
@@ -203,7 +199,6 @@ class BatteryDescription(TerncySensorDescription):
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
     PLATFORM: Platform = Platform.SWITCH
-    has_entity_name: bool = True
     value_attr: str = "on"
     invert_state: bool = False
 
