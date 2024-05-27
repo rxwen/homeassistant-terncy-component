@@ -575,7 +575,7 @@ class TerncyGateway:
         _LOGGER.debug("[%s] Fetching data...", self.unique_id)
 
         # room
-        lang = self.hass.config.language
+        lang = self.hass.config.language  # HA>=2022.12
         default_rooms = DEFAULT_ROOMS.get(lang, DEFAULT_ROOMS.get("en"))
         try:
             rooms: list[RoomData] = await self._fetch_data("room")
