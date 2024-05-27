@@ -8,6 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from .entity import TerncyEntity
 from .entity_descriptions import TerncyEntityDescription
 from ..const import DOMAIN
+from ..types import AttrValue
 
 if TYPE_CHECKING:
     from ..core.gateway import TerncyGateway
@@ -19,13 +20,14 @@ def create_entity(
     gateway: "TerncyGateway",
     eid: str,
     description: TerncyEntityDescription,
+    init_states: list[AttrValue],  # 初始状态，用于判断设备支持多少特性。
 ) -> TerncyEntity:
     domain = str(description.PLATFORM)
     cls = (  # fmt: off
         TerncyEntity.NEW.get(f"{domain}.key.{description.key}")
         or TerncyEntity.NEW.get(domain)
     )
-    return cls(gateway, eid, description)
+    return cls(gateway, eid, description, init_states)
 
 
 def ha_add_entity(hass: HomeAssistant, config_entry: ConfigEntry, entity: TerncyEntity):

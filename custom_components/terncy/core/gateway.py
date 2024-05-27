@@ -11,15 +11,22 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    MAJOR_VERSION,
+    MINOR_VERSION,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
-    DeviceInfo,
     format_mac,
 )
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 9):
+    from homeassistant.helpers.device_registry import DeviceInfo
+else:
+    from homeassistant.helpers.entity import DeviceInfo
+
 from homeassistant.helpers.typing import UNDEFINED
 from terncy import Terncy
 from terncy.event import Connected, Disconnected, EventMessage
@@ -517,7 +524,7 @@ class TerncyGateway:
                     if svc_room := svc.get("room"):
                         if svc_room_name := self.room_data.get(svc_room):
                             suggested_area = svc_room_name
-                    attrs = [a['attr'] for a in attributes]
+                    attrs = [a["attr"] for a in attributes]
                     descriptions = [
                         description
                         for description in PROFILES.get(profile)
@@ -526,15 +533,6 @@ class TerncyGateway:
                             or set(description.required_attrs).issubset(attrs)
                         )
                     ]
-                    descriptions = [
-                        description
-                        for description in descriptions
-                        if (
-                            not description.disabled_attrs
-                            or not set(description.disabled_attrs).issubset(attrs)
-                        )
-                    ]
-
                     if len(descriptions) > 0:
                         identifiers = {(DOMAIN, eid)}
                         device_registry.async_get_or_create(
@@ -551,8 +549,10 @@ class TerncyGateway:
                         )
                         self.add_device(eid, device)
                         for description in descriptions:
-                            entity = create_entity(self, eid, description)
-                            entity._attr_device_info = DeviceInfo(identifiers=identifiers)
+                            entity = create_entity(self, eid, description, attributes)
+                            entity._attr_device_info = DeviceInfo(
+                                identifiers=identifiers
+                            )
                             ha_add_entity(self.hass, self.config_entry, entity)
                             device.entities.append(entity)
                 else:
@@ -575,7 +575,7 @@ class TerncyGateway:
         _LOGGER.debug("[%s] Fetching data...", self.unique_id)
 
         # room
-        lang = self.hass.config.language
+        lang = self.hass.config.language  # HA>=2022.12
         default_rooms = DEFAULT_ROOMS.get(lang, DEFAULT_ROOMS.get("en"))
         try:
             rooms: list[RoomData] = await self._fetch_data("room")
@@ -640,6 +640,7 @@ class TerncyGateway:
         online = scene_data.get("online", True)
 
         entity = self.scenes.get(scene_id)
+        init_states = [{"attr": "on", "value": scene_data["on"]}]
         if not entity:
             description = TerncySwitchDescription(
                 key="scene",
@@ -648,7 +649,7 @@ class TerncyGateway:
                 unique_id_prefix=self.unique_id,  # scene_id不是uuid形式的，加个网关id作前缀
             )
             identifiers = {(DOMAIN, f"{self.unique_id}_scenes")}
-            entity = create_entity(self, scene_id, description)
+            entity = create_entity(self, scene_id, description, init_states)
             entity._attr_device_info = DeviceInfo(identifiers=identifiers)
             ha_add_entity(self.hass, self.config_entry, entity)
             self.scenes[scene_id] = entity
@@ -656,6 +657,6 @@ class TerncyGateway:
             entity._attr_name = name
 
         entity.set_available(online)
-        entity.update_state([{"attr": "on", "value": scene_data["on"]}])
+        entity.update_state(init_states)
 
     # endregion

@@ -6,7 +6,6 @@ from typing import Any, Callable
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.cover import CoverEntityDescription
-from homeassistant.components.event import EventDeviceClass, EventEntityDescription
 from homeassistant.components.light import (
     ColorMode,
     LightEntityDescription,
@@ -19,18 +18,23 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
-    EntityCategory,
     LIGHT_LUX,
     MAJOR_VERSION,
+    MINOR_VERSION,
     PERCENTAGE,
     Platform,
     UnitOfTemperature,
 )
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 3):
+    from homeassistant.const import EntityCategory
+else:
+    from homeassistant.helpers.entity import EntityCategory
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType, UndefinedType
 
-from ..const import EVENT_ENTITY_BUTTON_EVENTS
-
+from ..const import EVENT_ENTITY_BUTTON_EVENTS, HAS_EVENT_PLATFORM
 
 # https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
 FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
@@ -39,6 +43,8 @@ FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyEntityDescription(EntityDescription):
     PLATFORM: Platform = None
+
+    has_entity_name: bool = True
 
     sub_key: str | None = None
     """用作 unique_id 的后缀。"""
@@ -53,9 +59,6 @@ class TerncyEntityDescription(EntityDescription):
     required_attrs: list[str] | None = None
     """需要的属性，如果没有这些属性，就不创建实体"""
 
-    disabled_attrs: list[str] | None = None
-    """不应存在的属性，如果有任一属性，就不创建实体"""
-
 
 # region Binary Sensor
 
@@ -65,7 +68,6 @@ class TerncyBinarySensorDescription(
     TerncyEntityDescription, BinarySensorEntityDescription
 ):
     PLATFORM: Platform = Platform.BINARY_SENSOR
-    has_entity_name: bool = True
     value_attr: str = ""
     value_map: dict[int, bool] = field(
         default_factory=lambda: {4: True, 3: True, 2: True, 1: True, 0: False}
@@ -80,7 +82,6 @@ class TerncyBinarySensorDescription(
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription):
     PLATFORM: Platform = Platform.CLIMATE
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
 
 
@@ -92,15 +93,6 @@ class TerncyClimateDescription(TerncyEntityDescription, ClimateEntityDescription
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncyCoverDescription(TerncyEntityDescription, CoverEntityDescription):
     PLATFORM: Platform = Platform.COVER
-    has_entity_name: bool = True
-    name: str | UndefinedType | None = None
-
-
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyTiltCoverDescription(TerncyEntityDescription, CoverEntityDescription):
-    key: str = "tilt"
-    PLATFORM: Platform = Platform.COVER
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
 
 
@@ -109,21 +101,22 @@ class TerncyTiltCoverDescription(TerncyEntityDescription, CoverEntityDescription
 # region Event
 
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
-    PLATFORM: Platform = Platform.EVENT
-    has_entity_name: bool = True
+if HAS_EVENT_PLATFORM:
+    from homeassistant.components.event import EventDeviceClass, EventEntityDescription
 
+    @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+    class TerncyEventDescription(TerncyEntityDescription, EventEntityDescription):
+        PLATFORM: Platform = Platform.EVENT
 
-@dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
-class TerncyButtonDescription(TerncyEventDescription):
-    key: str = "event_button"
-    sub_key: str = "button"
-    device_class: EventDeviceClass = EventDeviceClass.BUTTON
-    translation_key: str = "button"
-    event_types: list[str] = field(
-        default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
-    )
+    @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+    class TerncyButtonDescription(TerncyEventDescription):
+        key: str = "event_button"
+        sub_key: str = "button"
+        device_class: EventDeviceClass = EventDeviceClass.BUTTON
+        translation_key: str = "button"
+        event_types: list[str] = field(
+            default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
+        )
 
 
 # endregion
@@ -135,7 +128,6 @@ class TerncyButtonDescription(TerncyEventDescription):
 class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
     key: str = "light"
     PLATFORM: Platform = Platform.LIGHT
-    has_entity_name: bool = True
     name: str | UndefinedType | None = None
     color_mode: ColorMode | None = None
     supported_color_modes: set[ColorMode] | None = None
@@ -150,7 +142,6 @@ class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySensorDescription(TerncyEntityDescription, SensorEntityDescription):
     PLATFORM: Platform = Platform.SENSOR
-    has_entity_name: bool = True
     value_attr: str = ""
     value_fn: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: x
 
@@ -214,7 +205,6 @@ class BatteryDescription(TerncySensorDescription):
 @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
 class TerncySwitchDescription(TerncyEntityDescription, SwitchEntityDescription):
     PLATFORM: Platform = Platform.SWITCH
-    has_entity_name: bool = True
     value_attr: str = "on"
     invert_state: bool = False
 

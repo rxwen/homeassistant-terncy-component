@@ -22,7 +22,11 @@ class TerncyEntity(Entity):
 
     ADD: dict[str, AddEntitiesCallback] = {}  # key: config_entry_id.domain
     NEW: dict[
-        str, Callable[["TerncyGateway", str, TerncyEntityDescription], "TerncyEntity"]
+        str,
+        Callable[
+            ["TerncyGateway", str, TerncyEntityDescription, list[AttrValue]],
+            "TerncyEntity",
+        ],
     ] = {}  # key: domain.key or domain
 
     entity_description: TerncyEntityDescription
@@ -33,6 +37,7 @@ class TerncyEntity(Entity):
         gateway: "TerncyGateway",
         eid: str,
         description: TerncyEntityDescription,
+        init_states: list[AttrValue],
     ):
         self.gateway = gateway
         self.eid = eid

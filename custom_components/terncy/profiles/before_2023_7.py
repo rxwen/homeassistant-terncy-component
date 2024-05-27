@@ -15,7 +15,12 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ColorMode
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.helpers.entity import EntityCategory  # <2023.3
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2023, 3):
+    from homeassistant.const import EntityCategory
+else:
+    from homeassistant.helpers.entity import EntityCategory
 
 from ..const import (
     PROFILE_AC_UNIT_MACHINE,
@@ -63,9 +68,6 @@ from ..switch import (
     KEY_DISABLED_RELAY_STATUS,
     KEY_DISABLE_RELAY,
     KEY_WALL_SWITCH,
-)
-from ..cover import (
-    ATTR_TILT_POSITION,
 )
 
 PROFILES: dict[int, list[TerncyEntityDescription]] = {
@@ -155,12 +157,6 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyCoverDescription(
             key="cover",
             device_class=CoverDeviceClass.CURTAIN,
-            disabled_attrs = [ATTR_TILT_POSITION],
-        ),
-        TerncyCoverDescription(
-            key="cover",
-            device_class=CoverDeviceClass.CURTAIN,
-            required_attrs = [ATTR_TILT_POSITION],
         ),
     ],
     PROFILE_YAN_BUTTON: [
