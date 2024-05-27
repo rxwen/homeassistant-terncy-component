@@ -524,7 +524,7 @@ class TerncyGateway:
                     if svc_room := svc.get("room"):
                         if svc_room_name := self.room_data.get(svc_room):
                             suggested_area = svc_room_name
-                    attrs = [a['attr'] for a in attributes]
+                    attrs = [a["attr"] for a in attributes]
                     descriptions = [
                         description
                         for description in PROFILES.get(profile)
@@ -549,8 +549,10 @@ class TerncyGateway:
                         )
                         self.add_device(eid, device)
                         for description in descriptions:
-                            entity = create_entity(self, eid, description)
-                            entity._attr_device_info = DeviceInfo(identifiers=identifiers)
+                            entity = create_entity(self, eid, description, attributes)
+                            entity._attr_device_info = DeviceInfo(
+                                identifiers=identifiers
+                            )
                             ha_add_entity(self.hass, self.config_entry, entity)
                             device.entities.append(entity)
                 else:
@@ -638,6 +640,7 @@ class TerncyGateway:
         online = scene_data.get("online", True)
 
         entity = self.scenes.get(scene_id)
+        init_states = [{"attr": "on", "value": scene_data["on"]}]
         if not entity:
             description = TerncySwitchDescription(
                 key="scene",
@@ -646,7 +649,7 @@ class TerncyGateway:
                 unique_id_prefix=self.unique_id,  # scene_id不是uuid形式的，加个网关id作前缀
             )
             identifiers = {(DOMAIN, f"{self.unique_id}_scenes")}
-            entity = create_entity(self, scene_id, description)
+            entity = create_entity(self, scene_id, description, init_states)
             entity._attr_device_info = DeviceInfo(identifiers=identifiers)
             ha_add_entity(self.hass, self.config_entry, entity)
             self.scenes[scene_id] = entity
@@ -654,6 +657,6 @@ class TerncyGateway:
             entity._attr_name = name
 
         entity.set_available(online)
-        entity.update_state([{"attr": "on", "value": scene_data["on"]}])
+        entity.update_state(init_states)
 
     # endregion

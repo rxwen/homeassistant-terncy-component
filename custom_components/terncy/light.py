@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .hass.entity import TerncyEntity
 from .hass.entity_descriptions import TerncyLightDescription
+from .types import AttrValue
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,8 +42,14 @@ class TerncyLight(TerncyEntity, LightEntity):
     _attr_supported_color_modes: set[ColorMode] | set[str] | None
     _attr_supported_features: LightEntityFeature
 
-    def __init__(self, gateway, eid: str, description: TerncyLightDescription):
-        super().__init__(gateway, eid, description)
+    def __init__(
+        self,
+        gateway,
+        eid: str,
+        description: TerncyLightDescription,
+        init_states: list[AttrValue],
+    ):
+        super().__init__(gateway, eid, description, init_states)
         self._attr_brightness = 0
         self._attr_color_mode = description.color_mode
         self._attr_color_temp = 0

@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .hass.entity import TerncyEntity
 from .hass.entity_descriptions import TerncyCoverDescription
+from .types import AttrValue
 from .utils import get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +30,22 @@ K_CURTAIN_MOTOR_STATUS = "curtainMotorStatus"
 K_TILT_ANGLE = "tiltAngle"
 
 
+def get_tilt_angle(attrs: list[AttrValue]) -> int | None:
+    tilt_angle = get_attr_value(attrs, K_TILT_ANGLE)
+    if tilt_angle is not None and -90 <= tilt_angle <= 90:
+        return tilt_angle
+    return None
+
+
+def _create_entity(
+    gateway, eid: str, description: TerncyCoverDescription, init_states: list[AttrValue]
+):
+    if get_tilt_angle(init_states) is not None:
+        return TerncyTiltCover(gateway, eid, description, init_states)
+    else:
+        return TerncyCover(gateway, eid, description, init_states)
+
+
 class TerncyCover(TerncyEntity, CoverEntity):
     """Represents a Terncy Cover."""
 
@@ -41,7 +58,7 @@ class TerncyCover(TerncyEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
-    def update_state(self, attrs):
+    def update_state(self, attrs: list[AttrValue]):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
         if (value := get_attr_value(attrs, K_CURTAIN_PERCENT)) is not None:
             self._attr_current_cover_position = value
@@ -106,9 +123,9 @@ class TerncyTiltCover(TerncyCover):
             return None
         return 100 - round(abs(self._tilt_angle) / 0.9)
 
-    def update_state(self, attrs):
+    def update_state(self, attrs: list[AttrValue]):
         # _LOGGER.debug("[%s] <= %s", self.unique_id, attrs)
-        if (tilt_angle := get_attr_value(attrs, K_TILT_ANGLE)) is not None:
+        if (tilt_angle := get_tilt_angle(attrs)) is not None:
             self._tilt_angle = tilt_angle
         super().update_state(attrs)
 
@@ -141,4 +158,4 @@ class TerncyTiltCover(TerncyCover):
         await self.api.set_attribute(self.eid, K_CURTAIN_MOTOR_STATUS, 0)
 
 
-TerncyEntity.NEW["cover"] = TerncyCover
+TerncyEntity.NEW["cover"] = _create_entity
