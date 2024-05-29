@@ -75,6 +75,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         if gateway := hass.data[DOMAIN].get(entry.entry_id):
+            gateway.api.retry = False
             await gateway.api.stop()
             hass.data[DOMAIN].pop(entry.entry_id)
 
