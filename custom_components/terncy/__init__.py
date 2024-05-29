@@ -71,13 +71,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("async_unload_entry %s", entry.unique_id)
 
+    gateway: TerncyGateway = hass.data[DOMAIN].get(entry.entry_id)
+    if not gateway:
+        _LOGGER.error("gateway not found! entry_id:%s")
+        return False
+
+    gateway.logger.info("Unload.")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        if gateway := hass.data[DOMAIN].get(entry.entry_id):
-            gateway.api.retry = False
-            await gateway.api.stop()
-            hass.data[DOMAIN].pop(entry.entry_id)
+        await gateway.stop()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -86,18 +89,14 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     # reference: https://developers.home-assistant.io/docs/device_registry_index/#removing-devices
-    _LOGGER.debug(
-        "async_remove_config_entry_device entry.unique_id:%s device_id:%s",
-        config_entry.unique_id,
-        device_entry.id,
-    )
+    _LOGGER.debug("[%s] Remove device: %s", config_entry.unique_id, device_entry.id)
     return True
 
 
 async def entry_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     # https://developers.home-assistant.io/docs/config_entries_options_flow_handler/#signal-updates
-    _LOGGER.debug("[%s] Options updated: %s", entry.unique_id, entry.options)
     gateway: TerncyGateway = hass.data[DOMAIN][entry.entry_id]
+    gateway.logger.debug("[%s] Options updated: %s", entry.unique_id, entry.options)
     if (
         entry.options.get(CONF_EXPORT_DEVICE_GROUPS, True)
         != gateway.export_device_groups

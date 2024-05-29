@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -12,9 +11,6 @@ from ..types import AttrValue
 
 if TYPE_CHECKING:
     from ..core.gateway import TerncyGateway
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TerncyEntity(Entity):
@@ -81,7 +77,7 @@ class TerncyEntity(Entity):
             DOMAIN,
             f"{self.eid}{description.old_unique_id_suffix}",
         ):
-            _LOGGER.debug("Migrate from old entity_id %s", old_entity_id)
+            self.gateway.logger.debug("Migrate from old entity_id %s", old_entity_id)
             entity_registry.async_update_entity(
                 old_entity_id,
                 new_unique_id=self._attr_unique_id,

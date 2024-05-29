@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -6,8 +5,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from ..const import DEVICE_TRIGGER_ACTIONS_MAP, DOMAIN, HAS_EVENT_PLATFORM
 from ..hass.entity import TerncyEntity
 from ..types import AttrValue
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TerncyDevice:
