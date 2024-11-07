@@ -131,7 +131,7 @@ class TerncyLightDescription(TerncyEntityDescription, LightEntityDescription):
     name: str | UndefinedType | None = None
     color_mode: ColorMode | None = None
     supported_color_modes: set[ColorMode] | None = None
-    supported_features: LightEntityFeature = 0
+    supported_features: LightEntityFeature = LightEntityFeature(0)
 
 
 # endregion
