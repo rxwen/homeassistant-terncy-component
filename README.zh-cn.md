@@ -87,7 +87,7 @@ homeassistant_configuration_root
 
 ## 调试
 
-启用及查看小燕插件日志的方法
+### 通过配置文件启用小燕插件日志
 
 在 home assistant 配置目录下的 configuration.yaml 文件中添加以下内容：
 
@@ -100,6 +100,14 @@ logger:
     custom_components.terncy: debug
 
 ```
+
+### 通过 Home Assistant UI 启用小燕插件日志
+
+打开 http://{ip_of_home_assistant}:8123/config/Integrations/integration/terncy
+点击 `Enable debug logging` 按键
+
+
+### 查看小燕插件日志
 
 重启 home assistant 后，可在 http://{ip_of_home_assistant}:8123/config/logs 页查看日志。如果通过 docker 运行 home assistant，也可用 `docker logs -f --tail 0  {docker_instantce_name}` 命令查看。
 

@@ -86,7 +86,7 @@ Once registration is complete you should see the Terncy lights listed as light e
 
 ## Debugging
 
-Enable and view log of Terncy component
+### Enable log of Terncy component via config file
 
 Edit configuration.yaml file in home assistant config directory, add below contents:
 
@@ -99,6 +99,14 @@ logger:
     custom_components.terncy: debug
 
 ```
+
+### Enable log of Terncy component via HomeAssistant UI
+
+Go to http://{ip_of_home_assistant}:8123/config/Integrations/integration/terncy
+Click the `Enable debug logging` button
+
+
+### View log of Terncy component
 
 View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker logs -f --tail 0  {docker_instantce_name}` if running home assistant in docker.
 
