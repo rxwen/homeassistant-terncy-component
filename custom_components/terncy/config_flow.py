@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
-from homeassistant.const import CONF_DEVICE, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_PORT, MAJOR_VERSION, MINOR_VERSION
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -189,7 +189,8 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        if (MAJOR_VERSION, MINOR_VERSION) < (2024, 12):
+            self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
