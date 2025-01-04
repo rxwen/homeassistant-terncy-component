@@ -12,7 +12,7 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/rxwen/homeassistant-terncy-component/issues",
   "requirements": ["terncy==0.4.0","websockets>=10.3","zeroconf>=0.28.8"],
-  "version": "1.0.50",
+  "version": "1.0.51",
   "zeroconf": [
       {"type":"_websocket._tcp.local.","name":"box-*"}
   ]
