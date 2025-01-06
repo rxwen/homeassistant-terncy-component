@@ -5,7 +5,7 @@ import math
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .hass.entity import TerncyEntity
 from .hass.entity_descriptions import TerncyLightDescription
@@ -35,9 +36,9 @@ class TerncyLight(TerncyEntity, LightEntity):
 
     _attr_brightness: int | None = None
     _attr_color_mode: ColorMode | str | None
-    _attr_color_temp: int | None = None
-    _attr_max_mireds: int = 400  # 2500 K
-    _attr_min_mireds: int = 153  # 6500 K
+    _attr_color_temp_kelvin: int | None = None
+    _attr_min_color_temp_kelvin = 2500
+    _attr_max_color_temp_kelvin = 6500
     _attr_hs_color: tuple[float, float] | None = None
     _attr_supported_color_modes: set[ColorMode] | set[str] | None
     _attr_supported_features: LightEntityFeature
@@ -50,10 +51,7 @@ class TerncyLight(TerncyEntity, LightEntity):
         init_states: list[AttrValue],
     ):
         super().__init__(gateway, eid, description, init_states)
-        self._attr_brightness = 0
         self._attr_color_mode = description.color_mode
-        self._attr_color_temp = 0
-        self._attr_hs_color = (0, 0)
         self._attr_supported_color_modes = description.supported_color_modes
         self._attr_supported_features = description.supported_features
 
@@ -64,9 +62,9 @@ class TerncyLight(TerncyEntity, LightEntity):
         bri = get_attr_value(attrs, "brightness")
         if bri:
             self._attr_brightness = int(bri / 100 * 255)
-        color_temp = get_attr_value(attrs, "colorTemperature")
-        if color_temp is not None:
-            self._attr_color_temp = color_temp
+        color_temp_mired = get_attr_value(attrs, "colorTemperature")
+        if color_temp_mired is not None:
+            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(color_temp_mired)
         hue = get_attr_value(attrs, "hue")
         sat = get_attr_value(attrs, "saturation")
         if hue is not None:
@@ -90,14 +88,15 @@ class TerncyLight(TerncyEntity, LightEntity):
             attrs.append({"attr": "brightness", "value": terncy_bri})
             self._attr_brightness = bri
 
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs.get(ATTR_COLOR_TEMP)
-            if color_temp < 50:
-                color_temp = 50
-            if color_temp > 400:
-                color_temp = 400
-            attrs.append({"attr": "colorTemperature", "value": color_temp})
-            self._attr_color_temp = color_temp
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+            if color_temp_kelvin < self._attr_min_color_temp_kelvin:
+                color_temp_kelvin = self._attr_min_color_temp_kelvin
+            elif color_temp_kelvin > self._attr_max_color_temp_kelvin:
+                color_temp_kelvin = self._attr_max_color_temp_kelvin
+            color_temp_mired = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+            attrs.append({"attr": "colorTemperature", "value": color_temp_mired})
+            self._attr_color_temp_kelvin = color_temp_kelvin
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs.get(ATTR_HS_COLOR)
