@@ -7,7 +7,6 @@ from typing import Any
 import terncy
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_DEVICE, CONF_PORT, MAJOR_VERSION, MINOR_VERSION
 from homeassistant.core import callback
@@ -22,6 +21,11 @@ from .const import (
     TERNCY_HUB_SVC_NAME,
 )
 from .hub_monitor import TerncyHubManager
+
+if (MAJOR_VERSION, MINOR_VERSION) >= (2025, 2):
+    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+else:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
