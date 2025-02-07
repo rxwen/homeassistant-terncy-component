@@ -7,6 +7,10 @@ from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import EntityCategory
 
 from ..const import (
+    ACTION_DOUBLE_PRESS,
+    ACTION_LONG_PRESS,
+    ACTION_ROTATION,
+    ACTION_SINGLE_PRESS,
     EVENT_ENTITY_BUTTON_EVENTS,
     EVENT_ENTITY_DIAL_EVENTS,
     HAS_EVENT_PLATFORM,
@@ -290,8 +294,46 @@ if HAS_EVENT_PLATFORM:
         PROFILE_YAN_BUTTON: EVENT_ENTITY_BUTTON_EVENTS,
         PROFILE_SMART_DIAL: EVENT_ENTITY_DIAL_EVENTS,
     }
+
+    SINGLE = TerncyButtonDescription(
+        key=ACTION_SINGLE_PRESS,
+        sub_key=ACTION_SINGLE_PRESS,
+        translation_key=ACTION_SINGLE_PRESS,
+        event_types=[ACTION_SINGLE_PRESS],
+    )
+    DOUBLE = TerncyButtonDescription(
+        key=ACTION_DOUBLE_PRESS,
+        sub_key=ACTION_DOUBLE_PRESS,
+        translation_key=ACTION_DOUBLE_PRESS,
+        event_types=[ACTION_DOUBLE_PRESS],
+        entity_registry_enabled_default=False,  # 双击默认禁用
+    )
+    LONG = TerncyButtonDescription(
+        key=ACTION_LONG_PRESS,
+        sub_key=ACTION_LONG_PRESS,
+        translation_key=ACTION_LONG_PRESS,
+        event_types=[ACTION_LONG_PRESS],
+        entity_registry_enabled_default=False,  # 长按默认禁用
+    )
+    ROTATE = TerncyButtonDescription(
+        key=ACTION_ROTATION,
+        sub_key=ACTION_ROTATION,
+        translation_key=ACTION_ROTATION,
+        event_types=[ACTION_ROTATION],
+        entity_registry_enabled_default=False,  # 旋转默认禁用
+    )
+    extra_descriptions = [SINGLE, DOUBLE, LONG]
+
     for profile in EVENT_ENTITY_EVENTS_MAP:
+        event_types = list(EVENT_ENTITY_EVENTS_MAP.get(profile))
         button_desc = TerncyButtonDescription(
-            event_types=list(EVENT_ENTITY_EVENTS_MAP.get(profile))
+            event_types=event_types,
+            entity_registry_enabled_default=False,  # 旧版的通用按钮实体默认禁用
         )
-        PROFILES.get(profile).append(button_desc)
+        descriptions = PROFILES.get(profile)
+        descriptions.append(button_desc)
+        # 为最常用的 单击、双击、长按 再单独创建一个 event 实体
+        descriptions.extend(extra_descriptions)
+        # 支持旋转的话就再加个旋转
+        if ACTION_ROTATION in event_types:
+            descriptions.append(ROTATE)

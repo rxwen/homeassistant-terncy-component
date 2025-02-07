@@ -54,5 +54,5 @@ class TerncyDevice:
             from ..event import TerncyEvent
 
             for entity in self.entities:
-                if isinstance(entity, TerncyEvent):
+                if isinstance(entity, TerncyEvent) and event_type in entity.event_types:
                     entity.trigger_event(event_type, event_attributes)
