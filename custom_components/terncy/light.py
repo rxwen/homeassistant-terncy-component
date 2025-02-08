@@ -54,6 +54,8 @@ class TerncyLight(TerncyEntity, LightEntity):
         self._attr_color_mode = description.color_mode
         self._attr_supported_color_modes = description.supported_color_modes
         self._attr_supported_features = description.supported_features
+        if ColorMode.HS in self.supported_color_modes:
+            self._attr_hs_color = (0.0, 0.0)
 
     def update_state(self, attrs):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
