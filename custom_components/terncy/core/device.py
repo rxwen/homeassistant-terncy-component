@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, Callable
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 
-from ..const import DEVICE_TRIGGER_ACTIONS_MAP, DOMAIN, HAS_EVENT_PLATFORM
+from ..const import DEVICE_TRIGGER_ACTIONS_MAP, DOMAIN
 from ..hass.entity import TerncyEntity
 from ..types import AttrValue
 
@@ -23,6 +24,9 @@ class TerncyDevice:
         self.eid = eid  # -01 -02 ... 结尾的
         self.profile = profile
         self.entities: list[TerncyEntity] = []
+        self._listeners: dict[
+            str, set[Callable[[str, dict[str, Any] | None], None]]
+        ] = {}
 
         # self.identifiers = {(DOMAIN, eid)}
 
@@ -49,10 +53,21 @@ class TerncyDevice:
 
     def trigger_event(
         self, event_type: str, event_attributes: dict[str, Any] | None = None
-    ):
-        if HAS_EVENT_PLATFORM:
-            from ..event import TerncyEvent
+    ) -> None:
+        if event_type in self._listeners:
+            for trigger_event in self._listeners[event_type]:
+                trigger_event(event_type, event_attributes)
 
-            for entity in self.entities:
-                if isinstance(entity, TerncyEvent):
-                    entity.trigger_event(event_type, event_attributes)
+    def add_event_listener(
+        self,
+        event_type: str,
+        trigger_event: Callable[[str, dict[str, Any] | None], None],
+    ) -> CALLBACK_TYPE:
+        @callback
+        def remove_listener() -> None:
+            if event_type in self._listeners:
+                self._listeners[event_type].discard(trigger_event)
+
+        self._listeners.setdefault(event_type, set()).add(trigger_event)
+
+        return remove_listener

@@ -24,6 +24,14 @@ class TerncyEvent(TerncyEntity, EventEntity):
 
     entity_description: TerncyEventDescription
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if device := self.gateway.parsed_devices.get(self.eid):
+            for event_type in self.event_types:
+                self.async_on_remove(
+                    device.add_event_listener(event_type, self.trigger_event)
+                )
+
     def update_state(self, attrs):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
         # do nothing
