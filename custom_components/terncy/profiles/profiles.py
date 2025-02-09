@@ -45,7 +45,6 @@ from ..hass.entity_descriptions import (
     IlluminanceDescription,
     TemperatureDescription,
     TerncyBinarySensorDescription,
-    TerncyButtonDescription,
     TerncyClimateDescription,
     TerncyCoverDescription,
     TerncyEntityDescription,
@@ -287,6 +286,8 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
 }
 
 if HAS_EVENT_PLATFORM:
+    from ..hass.entity_descriptions import TerncyButtonDescription
+
     EVENT_ENTITY_EVENTS_MAP = {
         PROFILE_PIR: EVENT_ENTITY_BUTTON_EVENTS,
         PROFILE_ONOFF_LIGHT: EVENT_ENTITY_BUTTON_EVENTS,
