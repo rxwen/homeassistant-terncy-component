@@ -54,6 +54,8 @@ class TerncyLight(TerncyEntity, LightEntity):
         self._attr_color_mode = description.color_mode
         self._attr_supported_color_modes = description.supported_color_modes
         self._attr_supported_features = description.supported_features
+        if ColorMode.HS in self.supported_color_modes:
+            self._attr_hs_color = (0.0, 0.0)
 
     def update_state(self, attrs):
         # _LOGGER.debug("%s <= %s", self.eid, attrs)
@@ -65,14 +67,17 @@ class TerncyLight(TerncyEntity, LightEntity):
         color_temp_mired = get_attr_value(attrs, "colorTemperature")
         if color_temp_mired is not None:
             self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(color_temp_mired)
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         hue = get_attr_value(attrs, "hue")
         sat = get_attr_value(attrs, "saturation")
         if hue is not None:
             hue = hue / 255 * 360.0
             self._attr_hs_color = (hue, self._attr_hs_color[1])
+            self._attr_color_mode = ColorMode.HS
         if sat is not None:
             sat = sat / 255 * 100
             self._attr_hs_color = (self._attr_hs_color[0], sat)
+            self._attr_color_mode = ColorMode.HS
         if self.hass:
             self.async_write_ha_state()
 
@@ -97,6 +102,7 @@ class TerncyLight(TerncyEntity, LightEntity):
             color_temp_mired = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
             attrs.append({"attr": "colorTemperature", "value": color_temp_mired})
             self._attr_color_temp_kelvin = color_temp_kelvin
+            self._attr_color_mode = ColorMode.COLOR_TEMP
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -105,6 +111,7 @@ class TerncyLight(TerncyEntity, LightEntity):
             attrs.append({"attr": "hue", "value": terncy_hue})
             attrs.append({"attr": "saturation", "value": terncy_sat})
             self._attr_hs_color = hs_color
+            self._attr_color_mode = ColorMode.HS
 
         await self.api.set_attributes(self.eid, attrs)
         self.async_write_ha_state()
