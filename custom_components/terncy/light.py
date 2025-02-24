@@ -64,8 +64,7 @@ class TerncyLight(TerncyEntity, LightEntity):
         bri = get_attr_value(attrs, "brightness")
         if bri:
             self._attr_brightness = int(bri / 100 * 255)
-        color_temp_mired = get_attr_value(attrs, "colorTemperature")
-        if color_temp_mired is not None:
+        if color_temp_mired := get_attr_value(attrs, "colorTemperature"):
             self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(color_temp_mired)
             self._attr_color_mode = ColorMode.COLOR_TEMP
         hue = get_attr_value(attrs, "hue")
