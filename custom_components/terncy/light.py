@@ -69,13 +69,10 @@ class TerncyLight(TerncyEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
         hue = get_attr_value(attrs, "hue")
         sat = get_attr_value(attrs, "saturation")
-        if hue is not None:
-            hue = hue / 255 * 360.0
-            self._attr_hs_color = (hue, self._attr_hs_color[1])
-            self._attr_color_mode = ColorMode.HS
-        if sat is not None:
-            sat = sat / 255 * 100
-            self._attr_hs_color = (self._attr_hs_color[0], sat)
+        if hue is not None or sat is not None:
+            hue = int(hue / 255 * 360.0) if hue is not None else self._attr_hs_color[0] if hasattr(self, "_attr_hs_color") else 0.0
+            sat = int(sat / 255 * 100) if sat is not None else self._attr_hs_color[1] if hasattr(self, "_attr_hs_color") else 0.0
+            self._attr_hs_color = (hue, sat)
             self._attr_color_mode = ColorMode.HS
         if self.hass:
             self.async_write_ha_state()
