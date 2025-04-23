@@ -32,7 +32,8 @@ def _parse_svc(dev_id, info):
     txt_records[CONF_IP] = ip_addr
     txt_records[CONF_PORT] = info.port
     for k in info.properties:
-        txt_records[k.decode("utf-8")] = info.properties[k].decode("utf-8")
+        if info.properties[k] is not None:
+            txt_records[k.decode("utf-8")] = info.properties[k].decode("utf-8")
     return txt_records
 
 
