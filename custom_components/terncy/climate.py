@@ -95,9 +95,8 @@ class TerncyClimate(TerncyEntity, ClimateEntity):
             else:
                 self._attr_fan_mode = None
 
-        if (
-            current_temperature := get_attr_value(attrs, K_AC_CURRENT_TEMPERATURE)
-        ) is not None:
+        current_temperature = get_attr_value(attrs, K_AC_CURRENT_TEMPERATURE)
+        if current_temperature is not None and current_temperature != 255:
             self._attr_current_temperature = current_temperature * self._attr_precision
 
         if (
