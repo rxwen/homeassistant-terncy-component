@@ -8,7 +8,13 @@ import terncy
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
-from homeassistant.const import CONF_DEVICE, CONF_PORT, MAJOR_VERSION, MINOR_VERSION
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_PORT,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -104,7 +110,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("async_step_begin_pairing: %s", user_input)
         if self.unique_id is None:
             await self.async_set_unique_id(self.identifier)
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
         ternobj = _get_terncy_instance(self)
         if self.token == "":
             _LOGGER.warning("request a new token form terncy %s", self.identifier)
@@ -163,7 +169,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         identifier = discovery_info.name
         identifier = identifier.replace("." + TERNCY_HUB_SVC_NAME, "")
         await self.async_set_unique_id(identifier)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         properties = discovery_info.properties
         _LOGGER.debug(properties)
