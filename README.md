@@ -113,3 +113,4 @@ View log at http://{ip_of_home_assistant}:8123/config/logs, or with  `docker log
 ## Note
 
 - When running ha in docker, the docker should be in [host network mode](https://docs.docker.com/network/host/), by appending `--netwrok host` argument to docker start command.
+- You can download the Android version app from [this link](https://pan.baidu.com/s/1jC0TJkLjjSbLpb-16RpQQQ?pwd=epbr), which has improved local access support.

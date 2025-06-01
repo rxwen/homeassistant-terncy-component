@@ -114,3 +114,4 @@ logger:
 ## 注意事项
 
 - 当通过 docker 运行 ha 时，需运行在 [host 网络模式](https://docs.docker.com/network/host/)下（添加`--network host`参数启动 docker）。
+- 可以通过[这个链接](https://pan.baidu.com/s/1jC0TJkLjjSbLpb-16RpQQQ?pwd=epbr)下载安卓版app，提供了更好的的本地登录功能。
