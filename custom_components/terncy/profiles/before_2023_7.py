@@ -43,6 +43,7 @@ from ..const import (
     PROFILE_PIR,
     PROFILE_PLUG,
     PROFILE_PRESENCE_SENSOR,
+    PROFILE_RH3020,
     PROFILE_SMART_DIAL,
     PROFILE_SWITCH,
     PROFILE_XY_SINGLE_AIR_COND,
@@ -258,6 +259,20 @@ PROFILES: dict[int, list[TerncyEntityDescription]] = {
         TerncyLightDescription(
             color_mode=ColorMode.BRIGHTNESS,
             supported_color_modes={ColorMode.BRIGHTNESS},
+        ),
+    ],
+    PROFILE_RH3020: [
+        TerncyBinarySensorDescription(
+            key="moisture",
+            sub_key="moisture",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            name=None,
+            value_attr="iasZoneStatus",
+            value_map={32: False, 33: True},
+        ),
+        BatteryDescription(
+            name="Battery",
+            value_fn=lambda x: min(x, 100),
         ),
     ],
     PROFILE_GAS: [
