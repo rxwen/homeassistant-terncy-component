@@ -104,6 +104,7 @@ class TerncyGateway:
         self.room_data: dict[str, str] = {}  # room_id: room_name
         self.scenes: dict[str, TerncyEntity] = {}  # 场景实体们
 
+        self.device_id: str | None = None  # 网关在设备注册表中的 id
         self.name = config_entry.title
         self.mac = format_mac(config_entry.unique_id.replace(TERNCY_HUB_ID_PREFIX, ""))
         ip = config_entry.data[CONF_HOST]
@@ -504,6 +505,12 @@ class TerncyGateway:
         else:
             return asyncio.create_task(target)
 
+    def _via_gateway_kwargs(self) -> dict:
+        """挂到网关下的子设备所需的 via 参数"""
+        if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 8):
+            return {"via_device_id": self.device_id}
+        return {"via_device": (DOMAIN, self.unique_id)}
+
     # endregion
 
     # region Setup
@@ -596,7 +603,7 @@ class TerncyGateway:
                             sw_version=sw_version,
                             hw_version=hw_version,
                             suggested_area=suggested_area,
-                            via_device=(DOMAIN, self.unique_id),
+                            **self._via_gateway_kwargs(),
                         )
                         self.add_device(eid, device)
                         for description in descriptions:
@@ -667,7 +674,7 @@ class TerncyGateway:
                 manufacturer=TERNCY_MANU_NAME,
                 model="TERNCY-SCENE",
                 name="TERNCY-SCENE",
-                via_device=(DOMAIN, self.unique_id),
+                **self._via_gateway_kwargs(),
             )
             for scene_data in scenes:
                 self.setup_scene(scene_data)

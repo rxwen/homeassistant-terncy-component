@@ -54,13 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # first create gateway device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    gateway_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, gateway.mac)},
         identifiers={(DOMAIN, gateway.unique_id)},
         manufacturer=TERNCY_MANU_NAME,
         name=gateway.name,
     )
+    gateway.device_id = gateway_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
