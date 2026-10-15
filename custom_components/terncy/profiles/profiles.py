@@ -13,6 +13,7 @@ from ..const import (
     ACTION_SINGLE_PRESS,
     EVENT_ENTITY_BUTTON_EVENTS,
     EVENT_ENTITY_DIAL_EVENTS,
+    HAS_BUTTON_EVENT_TYPE,
     HAS_EVENT_PLATFORM,
     PROFILE_AC_UNIT_MACHINE,
     PROFILE_COLOR_DIMMABLE_LIGHT,
@@ -313,6 +314,8 @@ if HAS_EVENT_PLATFORM:
         sub_key=ACTION_SINGLE_PRESS,
         translation_key=ACTION_SINGLE_PRESS,
         event_types=[ACTION_SINGLE_PRESS],
+        # 有标准按键实体时，单击默认禁用
+        entity_registry_enabled_default=not HAS_BUTTON_EVENT_TYPE,
     )
     DOUBLE = TerncyButtonDescription(
         key=ACTION_DOUBLE_PRESS,
@@ -336,6 +339,11 @@ if HAS_EVENT_PLATFORM:
         entity_registry_enabled_default=False,  # 旋转默认禁用
     )
     extra_descriptions = [SINGLE, DOUBLE, LONG]
+    if HAS_BUTTON_EVENT_TYPE:
+        from ..hass.entity_descriptions import TerncyStdButtonDescription
+
+        # 使用 HA 标准事件类型的按键实体，单击、多击、长按都在这一个实体里
+        extra_descriptions.insert(0, TerncyStdButtonDescription())
 
     for profile in EVENT_ENTITY_EVENTS_MAP:
         event_types = list(EVENT_ENTITY_EVENTS_MAP.get(profile))

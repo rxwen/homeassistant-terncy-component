@@ -80,6 +80,22 @@
           }
         }
       },
+      "std_button": {
+        "name": "Button Press",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_end": "Press",
+              "multi_press_end": "Multi-press",
+              "long_press_start": "Long Press Start",
+              "long_press_end": "Long Press Release"
+            }
+          },
+          "multi_press_count": {
+            "name": "Press count"
+          }
+        }
+      },
       "single_press": {
         "name": "Single Press",
         "state_attributes": {

@@ -55,6 +55,22 @@
           }
         }
       },
+      "std_button": {
+        "name": "按键",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_end": "单击",
+              "multi_press_end": "连击",
+              "long_press_start": "长按开始",
+              "long_press_end": "长按松开"
+            }
+          },
+          "multi_press_count": {
+            "name": "连击次数"
+          }
+        }
+      },
       "single_press": {
         "name": "单击",
         "state_attributes": {

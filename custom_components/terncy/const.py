@@ -105,9 +105,13 @@ EVENT_ENTITY_DIAL_EVENTS = [
     *_PRESS_EVENTS,
     ACTION_ROTATION,
 ]
+# 长按时网关每秒上报一次 long_press，超过这个秒数没有新的上报就认为已经松开
+LONG_PRESS_RELEASE_TIMEOUT = 1.5
 
 
 HAS_EVENT_PLATFORM = (MAJOR_VERSION, MINOR_VERSION) >= (2023, 8)  # HA>=2023.8
+# 标准按键事件类型 ButtonEventType
+HAS_BUTTON_EVENT_TYPE = (MAJOR_VERSION, MINOR_VERSION) >= (2026, 8)  # HA>=2026.8
 
 
 # region Default Rooms

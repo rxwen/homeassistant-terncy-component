@@ -34,7 +34,11 @@ else:
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType, UndefinedType
 
-from ..const import EVENT_ENTITY_BUTTON_EVENTS, HAS_EVENT_PLATFORM
+from ..const import (
+    EVENT_ENTITY_BUTTON_EVENTS,
+    HAS_BUTTON_EVENT_TYPE,
+    HAS_EVENT_PLATFORM,
+)
 
 # https://developers.home-assistant.io/blog/2023/12/11/entity-description-changes
 FROZEN_ENTITY_DESCRIPTION = MAJOR_VERSION >= 2024
@@ -117,6 +121,25 @@ if HAS_EVENT_PLATFORM:
         event_types: list[str] = field(
             default_factory=lambda: list(EVENT_ENTITY_BUTTON_EVENTS)
         )
+
+    if HAS_BUTTON_EVENT_TYPE:
+        from homeassistant.components.event import ButtonEventType
+
+        @dataclass(frozen=FROZEN_ENTITY_DESCRIPTION, kw_only=True)
+        class TerncyStdButtonDescription(TerncyButtonDescription):
+            """使用 HA 标准事件类型（ButtonEventType）的按键实体"""
+
+            key: str = "event_std_button"
+            sub_key: str = "std_button"
+            translation_key: str = "std_button"
+            event_types: list[str] = field(
+                default_factory=lambda: [
+                    ButtonEventType.PRESS_END,
+                    ButtonEventType.MULTI_PRESS_END,
+                    ButtonEventType.LONG_PRESS_START,
+                    ButtonEventType.LONG_PRESS_END,
+                ]
+            )
 
 
 # endregion
