@@ -350,7 +350,6 @@ class TerncyGateway:
 
     def _on_key_pressed(self, msg_data: KeyPressedMsgData):
         self.logger.debug("EVENT: keyPressed: %s", msg_data)
-        device_registry = dr.async_get(self.hass)
         for entity_data in msg_data:
             if "attributes" not in entity_data:
                 continue
@@ -363,9 +362,7 @@ class TerncyGateway:
                 event_type = ACTION_SINGLE_PRESS
             if device := self.parsed_devices.get(eid):
                 device.trigger_event(event_type, {EVENT_DATA_CLICK_TIMES: times})
-            if device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, eid)}
-            ):
+            if device_entry := self._get_device_entry(eid):
                 self.hass.bus.async_fire(
                     f"{DOMAIN}_{ACTION_PRESSED}",
                     {
@@ -377,14 +374,11 @@ class TerncyGateway:
 
     def _on_key_long_pressed(self, msg_data: SimpleMsgData):
         self.logger.debug("EVENT: keyLongPressed: %s", msg_data)
-        device_registry = dr.async_get(self.hass)
         for item in msg_data:
             eid = item["id"]
             if device := self.parsed_devices.get(eid):
                 device.trigger_event(ACTION_LONG_PRESS)
-            if device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, eid)}
-            ):
+            if device_entry := self._get_device_entry(eid):
                 self.hass.bus.async_fire(
                     f"{DOMAIN}_{ACTION_LONG_PRESS}",
                     {
@@ -395,14 +389,11 @@ class TerncyGateway:
 
     def _on_rotation(self, msg_data: SimpleMsgData):
         self.logger.debug("EVENT: rotation: %s", msg_data)
-        device_registry = dr.async_get(self.hass)
         for item in msg_data:
             eid = item["id"]
             if device := self.parsed_devices.get(eid):
                 device.trigger_event(ACTION_ROTATION)
-            if device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, eid)}
-            ):
+            if device_entry := self._get_device_entry(eid):
                 self.hass.bus.async_fire(
                     f"{DOMAIN}_{ACTION_ROTATION}",
                     {
@@ -443,9 +434,7 @@ class TerncyGateway:
                 }
                 for eid, device in will_delete.items():
                     device.set_available(False)
-                    if device_entry := device_registry.async_get_device(
-                        identifiers={(DOMAIN, eid)}
-                    ):
+                    if device_entry := self._get_device_entry(eid):
                         device_registry.async_remove_device(device_entry.id)
                         self.logger.debug(
                             "removed device_entry: %s %s",
@@ -510,6 +499,15 @@ class TerncyGateway:
         if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 8):
             return {"via_device_id": self.device_id}
         return {"via_device": (DOMAIN, self.unique_id)}
+
+    def _get_device_entry(self, eid: str) -> dr.DeviceEntry | None:
+        """按 eid 查本网关下的设备注册表条目"""
+        device_registry = dr.async_get(self.hass)
+        if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 8):
+            return device_registry.async_get_device_by_identifier(
+                (DOMAIN, eid), self.config_entry.entry_id
+            )
+        return device_registry.async_get_device(identifiers={(DOMAIN, eid)})
 
     # endregion
 
